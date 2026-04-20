@@ -25,6 +25,7 @@ type AuthContextValue = {
     patch: Partial<Pick<PublicUser, 'displayName' | 'avatarColor'>>,
   ) => Promise<AuthResult>
   changePassword: (newPassword: string) => Promise<AuthResult>
+  requestPasswordReset: (email: string) => Promise<AuthResult>
   deleteAccount: () => Promise<AuthResult>
 }
 
@@ -299,6 +300,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const requestPasswordReset = useCallback(
+    async (email: string): Promise<AuthResult> => {
+      const clean = email.trim().toLowerCase()
+      if (!looksLikeEmail(clean)) {
+        return { ok: false, error: 'Introduce un email válido.' }
+      }
+      const redirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/reset-password`
+          : undefined
+      const { error } = await supabase.auth.resetPasswordForEmail(clean, {
+        redirectTo,
+      })
+      if (error) return { ok: false, error: error.message }
+      return { ok: true }
+    },
+    [],
+  )
+
   const deleteAccount = useCallback(async (): Promise<AuthResult> => {
     if (!user) return { ok: false, error: 'Sesión no iniciada.' }
     // Sin permisos admin desde el cliente: borramos el profile (cascada borra
@@ -320,6 +340,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       updateProfile,
       changePassword,
+      requestPasswordReset,
       deleteAccount,
     }),
     [
@@ -330,6 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       updateProfile,
       changePassword,
+      requestPasswordReset,
       deleteAccount,
     ],
   )

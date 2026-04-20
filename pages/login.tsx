@@ -32,15 +32,6 @@ export default function LoginPage() {
       setError(res.error ?? 'No se pudo iniciar sesión.')
       return
     }
-    // Usuarios anteriores con contraseña < 8 caracteres: los marcamos para que
-    // /account les muestre un aviso pidiendo actualizar la contraseña.
-    if (password.length < 8) {
-      try {
-        window.sessionStorage.setItem('novafit:password-weak', '1')
-      } catch {}
-      router.replace('/account?update=password')
-      return
-    }
     router.replace(redirect)
   }
 
@@ -92,9 +83,17 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="sl-field-label">
-            Contraseña
-          </label>
+          <div className="mb-1.5 flex items-baseline justify-between gap-2">
+            <label htmlFor="password" className="sl-field-label !mb-0">
+              Contraseña
+            </label>
+            <Link
+              href="/forgot-password"
+              className="sl-focus text-[0.7rem] font-semibold tracking-[0.1em] text-[var(--sl-cyan)] hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
           <div className="relative">
             <span
               className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--sl-muted)]"
