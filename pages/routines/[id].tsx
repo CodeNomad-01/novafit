@@ -85,8 +85,8 @@ export default function RoutineDetailPage() {
           style={{ background: 'radial-gradient(circle, rgba(92,225,255,0.35), transparent 70%)' }}
           aria-hidden
         />
-        <div className="relative grid gap-6 lg:grid-cols-[1.4fr_auto] lg:items-center lg:gap-8">
-          <header className="sl-section-head max-w-xl">
+        <div className="relative space-y-5">
+          <header className="sl-section-head">
             <p className="sl-label">[ READY TO FIGHT ]</p>
             <h2 className="sl-title text-xl font-bold text-[var(--sl-text)]">
               {routine.exercises.length} objetivo
@@ -108,11 +108,11 @@ export default function RoutineDetailPage() {
               </p>
             )}
           </header>
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:min-w-[220px]">
+          <div className="flex flex-col gap-2">
             <button
               type="button"
               onClick={handleStart}
-              className="sl-btn sl-btn-primary sl-focus w-full py-4 text-sm sm:flex-1 lg:flex-none"
+              className="sl-btn sl-btn-primary sl-focus w-full py-4 text-sm"
             >
               <FiPlay className="h-5 w-5" aria-hidden />
               Iniciar combate
@@ -129,7 +129,7 @@ export default function RoutineDetailPage() {
                   router.push('/routines')
                 }
               }}
-              className="sl-btn sl-btn-danger sl-btn-sm sl-focus w-full sm:w-auto lg:w-full"
+              className="sl-btn sl-btn-danger sl-btn-sm sl-focus w-full"
             >
               <FiTrash2 className="h-4 w-4" aria-hidden />
               Eliminar

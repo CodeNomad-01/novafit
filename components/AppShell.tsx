@@ -22,9 +22,10 @@ import { useAuth } from '@/lib/auth/context'
 import { useNovaFit } from '@/lib/store/context'
 
 const nav = [
-  { href: '/', label: 'Sistema', icon: FiHome },
+  { href: '/', label: 'Home', icon: FiHome },
   { href: '/routines', label: 'Misiones', icon: FiMap },
   { href: '/friends', label: 'Aliados', icon: FiUsers },
+  { href: '/account', label: 'Cuenta', icon: FiUser },
 ]
 
 export function AppShell({
@@ -46,7 +47,6 @@ export function AppShell({
 
   const pathname = router.pathname
 
-  // Guardia: redirigir a /login si no hay usuario
   useEffect(() => {
     if (authLoading) return
     if (!user) {
@@ -58,7 +58,7 @@ export function AppShell({
   if (authLoading || !user) {
     return (
       <div className="relative flex min-h-screen items-center justify-center px-4 sl-app-bg">
-        <div className="relative z-10 max-w-full text-center">
+        <div className="relative z-10 text-center">
           <p className="sl-label">[ VERIFICANDO CREDENCIALES ]</p>
         </div>
       </div>
@@ -68,11 +68,11 @@ export function AppShell({
   return (
     <div className="relative z-10 flex min-h-screen flex-col text-[var(--sl-text)] sl-app-bg">
       {/* HEADER */}
-      <header className="sticky top-0 z-40 border-b border-[var(--sl-border)] bg-[rgba(3,5,13,0.85)] backdrop-blur-xl">
-        <div className="sl-container relative flex items-center justify-between gap-2 py-3 sm:gap-3">
+      <header className="sticky top-0 z-40 border-b border-[var(--sl-border)] bg-[rgba(3,5,13,0.9)] backdrop-blur-xl">
+        <div className="sl-container relative flex items-center justify-between gap-2 py-3">
           <Link
             href="/"
-            className="sl-focus flex min-w-0 shrink items-center gap-2 rounded-sm p-1 sm:gap-3"
+            className="sl-focus flex min-w-0 shrink items-center gap-2 rounded-sm p-1"
           >
             <span
               className="sl-ico shrink-0"
@@ -82,58 +82,17 @@ export function AppShell({
               }}
               aria-hidden
             >
-              <FiZap className="h-5 w-5" />
+              <FiZap className="h-4 w-4" />
             </span>
-            <div className="hidden min-w-0 leading-none sm:block">
-              <span className="sl-title block truncate text-[0.95rem] font-bold text-[var(--sl-text)]">
+            <span className="min-w-0 leading-none">
+              <span className="sl-title block truncate text-[0.85rem] font-bold text-[var(--sl-text)]">
                 NOVAFIT · SYSTEM
               </span>
-              <span className="sl-label mt-1 block text-[0.6rem]">
-                [ Hunter Training ]
+              <span className="sl-label sl-label-tight mt-0.5 block">
+                [ Hunter ]
               </span>
-            </div>
+            </span>
           </Link>
-
-          <nav
-            className="hidden items-center gap-1 md:flex"
-            aria-label="Principal"
-          >
-            {nav.map(({ href, label, icon: Icon }) => {
-              const active =
-                href === '/' ? pathname === '/' : pathname.startsWith(href)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`sl-focus relative flex items-center gap-2 px-4 py-2.5 sl-title text-xs font-bold tracking-[0.18em] transition-colors ${
-                    active
-                      ? 'text-[var(--sl-cyan)]'
-                      : 'text-[var(--sl-text-dim)] hover:text-[var(--sl-cyan)]'
-                  }`}
-                  style={
-                    active
-                      ? {
-                          background:
-                            'linear-gradient(180deg, rgba(92,225,255,0.16), rgba(92,225,255,0.04))',
-                          border: '1px solid rgba(92,225,255,0.5)',
-                          clipPath:
-                            'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
-                          textShadow: '0 0 10px rgba(92,225,255,0.5)',
-                          boxShadow: '0 0 16px rgba(92,225,255,0.2)',
-                        }
-                      : undefined
-                  }
-                >
-                  <Icon
-                    className="h-4 w-4 shrink-0"
-                    aria-hidden
-                    strokeWidth={active ? 2.5 : 2}
-                  />
-                  {label}
-                </Link>
-              )
-            })}
-          </nav>
 
           <UserMenu
             displayName={user.displayName}
@@ -149,7 +108,7 @@ export function AppShell({
         {hydrated && activeSessionId && (
           <Link
             href={`/session/${activeSessionId}`}
-            className="relative block overflow-hidden border-t border-[var(--sl-cyan)]/40 bg-[rgba(92,225,255,0.08)] px-3 py-2.5 text-center transition hover:bg-[rgba(92,225,255,0.14)] sm:px-4"
+            className="relative block overflow-hidden border-t border-[var(--sl-cyan)]/40 bg-[rgba(92,225,255,0.08)] px-3 py-2 text-center transition hover:bg-[rgba(92,225,255,0.14)]"
           >
             <span className="sl-label sl-label-tight inline-flex items-center gap-2 text-[var(--sl-cyan)]">
               <span className="relative inline-flex h-2 w-2 shrink-0">
@@ -157,10 +116,7 @@ export function AppShell({
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--sl-cyan)] sl-pulse-dot" />
               </span>
               <FiPlay className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              <span className="sm:hidden">[ MISIÓN EN CURSO ]</span>
-              <span className="hidden sm:inline">
-                [ MISIÓN EN CURSO · VOLVER AL COMBATE ]
-              </span>
+              [ MISIÓN EN CURSO ]
             </span>
           </Link>
         )}
@@ -170,32 +126,35 @@ export function AppShell({
 
       {/* TITLE BLOCK */}
       {!noHeaderTitle && title && (
-        <div className="sl-container relative z-10 pb-2 pt-8 sl-animate-in sm:pt-10 md:pt-12">
-          {eyebrow && <p className="sl-label mb-3">{eyebrow}</p>}
-          <h1 className="sl-title text-2xl font-bold leading-tight text-[var(--sl-text)] sm:text-3xl break-words">
+        <div className="sl-container relative z-10 pb-2 pt-7 sl-animate-in">
+          {eyebrow && <p className="sl-label mb-2">{eyebrow}</p>}
+          <h1 className="sl-title break-words text-2xl font-bold leading-tight text-[var(--sl-text)]">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-3 max-w-[56ch] text-sm leading-relaxed text-[var(--sl-text-dim)] sm:text-[15px]">
+            <p className="mt-2 max-w-[46ch] text-sm leading-relaxed text-[var(--sl-text-dim)]">
               {subtitle}
             </p>
           )}
-          <div className="sl-divider mt-5 opacity-60 sm:mt-6" />
+          <div className="sl-divider mt-5 opacity-60" />
         </div>
       )}
 
-      <main className="nv-mobile-nav-pad sl-container relative z-10 flex-1 pb-10 pt-6 sm:pt-8 md:pb-14 md:pt-10">
+      <main className="nv-mobile-nav-pad sl-container relative z-10 flex-1 pb-10 pt-5">
         {children}
       </main>
 
-      {/* BOTTOM NAV (MOBILE) */}
+      {/* BOTTOM NAV */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--sl-cyan)]/30 bg-[rgba(3,5,13,0.95)] backdrop-blur-xl md:hidden"
-        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
-        aria-label="Principal móvil"
+        className="fixed bottom-0 left-1/2 z-50 w-full -translate-x-1/2 border-t border-[var(--sl-cyan)]/30 bg-[rgba(3,5,13,0.95)] backdrop-blur-xl"
+        style={{
+          maxWidth: 'var(--sl-app-max)',
+          paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))',
+        }}
+        aria-label="Navegación principal"
       >
         <div className="sl-divider absolute inset-x-0 top-0 opacity-60" />
-        <div className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1 sm:px-2">
+        <div className="flex items-stretch justify-around px-1 pt-1">
           {nav.map(({ href, label, icon: Icon }) => {
             const active =
               href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -203,7 +162,7 @@ export function AppShell({
               <Link
                 key={href}
                 href={href}
-                className={`sl-focus flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2.5 sl-title text-[0.58rem] font-bold tracking-[0.12em] transition sm:text-[0.62rem] sm:tracking-[0.18em] ${
+                className={`sl-focus flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2.5 sl-title text-[0.56rem] font-bold tracking-[0.1em] transition ${
                   active
                     ? 'text-[var(--sl-cyan)]'
                     : 'text-[var(--sl-muted)]'
@@ -223,20 +182,6 @@ export function AppShell({
               </Link>
             )
           })}
-          <Link
-            href="/account"
-            className={`sl-focus flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2.5 sl-title text-[0.58rem] font-bold tracking-[0.12em] transition sm:text-[0.62rem] sm:tracking-[0.18em] ${
-              pathname.startsWith('/account')
-                ? 'text-[var(--sl-cyan)]'
-                : 'text-[var(--sl-muted)]'
-            }`}
-          >
-            <FiUser
-              className={`h-5 w-5 shrink-0 transition ${pathname.startsWith('/account') ? 'scale-110 opacity-100' : 'opacity-75'}`}
-              aria-hidden
-            />
-            <span className="max-w-full truncate">Cuenta</span>
-          </Link>
         </div>
       </nav>
     </div>
@@ -275,7 +220,7 @@ function UserMenu({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="sl-focus flex items-center gap-2 rounded-sm p-1 pr-2 transition hover:bg-[rgba(92,225,255,0.06)]"
+        className="sl-focus flex items-center gap-2 rounded-sm p-1 transition hover:bg-[rgba(92,225,255,0.06)]"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -294,12 +239,6 @@ function UserMenu({
         >
           {initial}
         </span>
-        <span className="hidden text-left leading-none sm:block">
-          <span className="sl-label block text-[0.6rem]">[ HUNTER ]</span>
-          <span className="mt-1 block max-w-[8rem] truncate text-xs font-semibold text-[var(--sl-text)]">
-            {displayName}
-          </span>
-        </span>
       </button>
 
       {open && (
@@ -309,7 +248,7 @@ function UserMenu({
           style={{ boxShadow: '0 0 30px rgba(92, 225, 255, 0.18)' }}
         >
           <div className="border-b border-[var(--sl-border)] px-3 py-3">
-            <p className="sl-label text-[0.6rem]">[ SESIÓN ACTIVA ]</p>
+            <p className="sl-label sl-label-tight">[ SESIÓN ACTIVA ]</p>
             <p className="mt-1 truncate text-sm font-semibold text-[var(--sl-text)]">
               {displayName}
             </p>

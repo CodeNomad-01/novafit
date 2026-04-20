@@ -64,6 +64,13 @@ export default function AccountPage() {
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault()
     setPwdMsg(null)
+    if (next.length < 8) {
+      setPwdMsg({
+        tone: 'err',
+        text: 'La contraseña debe tener al menos 8 caracteres.',
+      })
+      return
+    }
     if (next !== next2) {
       setPwdMsg({ tone: 'err', text: 'Las nuevas contraseñas no coinciden.' })
       return
@@ -114,7 +121,7 @@ export default function AccountPage() {
           <header className="sl-section-head mb-5">
             <div className="sl-head-row">
               <span
-                className="flex h-14 w-14 shrink-0 items-center justify-center border-2 text-xl sl-title font-black sm:h-16 sm:w-16 sm:text-2xl"
+                className="flex h-14 w-14 shrink-0 items-center justify-center border-2 text-xl sl-title font-black"
                 style={{
                   borderColor: user.avatarColor,
                   color: user.avatarColor,
@@ -130,10 +137,10 @@ export default function AccountPage() {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="sl-label">[ IDENTITY ]</p>
-                <h2 className="sl-title truncate text-lg font-bold text-[var(--sl-text)] sm:text-xl">
+                <h2 className="sl-title truncate text-lg font-bold text-[var(--sl-text)]">
                   @{user.username}
                 </h2>
-                <p className="sl-stat mt-1 truncate text-xs tracking-[0.2em] text-[var(--sl-cyan)] sm:tracking-[0.3em]">
+                <p className="sl-stat mt-1 truncate text-xs tracking-[0.15em] text-[var(--sl-cyan)]">
                   ID {user.friendCode}
                 </p>
               </div>
@@ -148,8 +155,9 @@ export default function AccountPage() {
               <input
                 id="displayName"
                 className="sl-input"
+                maxLength={64}
                 value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                onChange={(e) => setDisplayName(e.target.value.slice(0, 64))}
                 placeholder="Tu nombre de cazador"
               />
             </div>
@@ -193,17 +201,19 @@ export default function AccountPage() {
           </header>
 
           <form onSubmit={handleChangePassword} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-3">
               <div>
                 <label className="sl-field-label">Nueva contraseña</label>
                 <input
                   type="password"
                   className="sl-input"
                   value={next}
-                  onChange={(e) => setNext(e.target.value)}
+                  onChange={(e) => setNext(e.target.value.slice(0, 128))}
                   required
-                  minLength={6}
+                  minLength={8}
+                  maxLength={128}
                   autoComplete="new-password"
+                  placeholder="Mínimo 8 caracteres"
                 />
               </div>
               <div>
@@ -212,9 +222,10 @@ export default function AccountPage() {
                   type="password"
                   className="sl-input"
                   value={next2}
-                  onChange={(e) => setNext2(e.target.value)}
+                  onChange={(e) => setNext2(e.target.value.slice(0, 128))}
                   required
-                  minLength={6}
+                  minLength={8}
+                  maxLength={128}
                   autoComplete="new-password"
                 />
               </div>
@@ -245,7 +256,7 @@ export default function AccountPage() {
               datos guardados en este dispositivo.
             </p>
           </header>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3">
             <button
               type="button"
               onClick={handleLogout}

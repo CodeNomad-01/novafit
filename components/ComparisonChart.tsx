@@ -92,7 +92,7 @@ export function ComparisonChart({ labels, myVolumes, friendVolumes }: Props) {
   }
 
   return (
-    <div className="h-56 w-full sm:h-72">
+    <div className="h-56 w-full">
       <Bar data={data} options={options} />
     </div>
   )

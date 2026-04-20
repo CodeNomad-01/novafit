@@ -227,7 +227,7 @@ export default function FriendsPage() {
 
           <div className="sl-divider my-6" />
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="space-y-4">
             <div>
               <label htmlFor="fn" className="sl-field-label">
                 Nombre visible
@@ -235,8 +235,11 @@ export default function FriendsPage() {
               <input
                 id="fn"
                 className="sl-input"
+                maxLength={64}
                 value={displayNameDraft}
-                onChange={(e) => setDisplayNameDraft(e.target.value)}
+                onChange={(e) =>
+                  setDisplayNameDraft(e.target.value.slice(0, 64))
+                }
                 onBlur={() => {
                   if (displayNameDraft.trim() !== profile.displayName) {
                     setDisplayName(displayNameDraft)
@@ -248,17 +251,17 @@ export default function FriendsPage() {
             <div>
               <span className="sl-field-label">Código de cazador</span>
               <div className="flex gap-2">
-                <code className="sl-input sl-stat sl-notif flex min-w-0 flex-1 items-center overflow-hidden text-base font-black tracking-[0.2em] text-[var(--sl-cyan)] sm:text-lg sm:tracking-[0.3em]">
+                <code className="sl-input sl-stat sl-notif flex min-w-0 flex-1 items-center overflow-hidden text-base font-black tracking-[0.18em] text-[var(--sl-cyan)]">
                   {profile.friendCode}
                 </code>
                 <button
                   type="button"
                   onClick={copyUsername}
-                  className="sl-btn sl-btn-ghost sl-btn-sm sl-focus shrink-0 px-3 sm:px-4"
+                  className="sl-btn sl-btn-ghost sl-btn-sm sl-focus shrink-0 !px-3"
                   title="Copiar código"
                   aria-label="Copiar código"
                 >
-                  <FiCopy className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+                  <FiCopy className="h-4 w-4" aria-hidden />
                 </button>
               </div>
             </div>
@@ -266,7 +269,7 @@ export default function FriendsPage() {
         </section>
 
         {/* BUSCAR + INVITACIONES PENDIENTES */}
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
+        <div className="grid gap-5">
           <section className="sl-panel sl-pad-md flex flex-col">
             <header className="sl-section-head">
               <div className="sl-head-row">
@@ -302,9 +305,18 @@ export default function FriendsPage() {
                     className="sl-input pl-10"
                     placeholder="cazador_01"
                     value={query}
-                    onChange={(e) => setQuery(e.target.value.toLowerCase())}
+                    maxLength={24}
+                    onChange={(e) =>
+                      setQuery(
+                        e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9_]/g, '')
+                          .slice(0, 24),
+                      )
+                    }
                     autoCapitalize="none"
                     spellCheck={false}
+                    inputMode="text"
                   />
                 </div>
               </div>

@@ -68,13 +68,15 @@ export default function LoginPage() {
               id="email"
               name="email"
               type="email"
+              inputMode="email"
               autoComplete="email"
               autoCapitalize="none"
               spellCheck={false}
+              maxLength={254}
               className="sl-input pl-10"
               placeholder="cazador@guild.io"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.slice(0, 254))}
               required
             />
           </div>
@@ -96,10 +98,12 @@ export default function LoginPage() {
               name="password"
               type="password"
               autoComplete="current-password"
+              minLength={8}
+              maxLength={128}
               className="sl-input pl-10"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value.slice(0, 128))}
               required
             />
           </div>

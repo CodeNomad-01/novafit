@@ -12,6 +12,12 @@ type Props = {
   submitLabel: string
 }
 
+const MAX_NAME = 80
+const MAX_EXERCISES = 30
+const MAX_PLANNED_SETS = 20
+const MAX_REPS = 200
+const MAX_WEIGHT = 1000
+
 function emptyExercise(): RoutineExercise {
   return {
     id: newId(),
@@ -20,6 +26,18 @@ function emptyExercise(): RoutineExercise {
     defaultReps: 10,
     defaultWeight: 0,
   }
+}
+
+function clampInt(v: unknown, min: number, max: number, fallback: number) {
+  const n = Math.floor(Number(v))
+  if (!Number.isFinite(n)) return fallback
+  return Math.min(max, Math.max(min, n))
+}
+
+function clampNumber(v: unknown, min: number, max: number, fallback: number) {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return fallback
+  return Math.min(max, Math.max(min, n))
 }
 
 export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
@@ -42,7 +60,9 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
   }
 
   function addExercise() {
-    setExercises((prev) => [...prev, emptyExercise()])
+    setExercises((prev) =>
+      prev.length >= MAX_EXERCISES ? prev : [...prev, emptyExercise()],
+    )
   }
 
   function removeExercise(i: number) {
@@ -55,22 +75,23 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
     const cleaned = exercises
       .map((e) => ({
         ...e,
-        name: e.name.trim(),
-        plannedSets: Math.max(1, Math.floor(Number(e.plannedSets)) || 1),
-        defaultReps: Math.max(0, Number(e.defaultReps) || 0),
-        defaultWeight: Math.max(0, Number(e.defaultWeight) || 0),
+        name: e.name.trim().slice(0, MAX_NAME),
+        plannedSets: clampInt(e.plannedSets, 1, MAX_PLANNED_SETS, 1),
+        defaultReps: clampInt(e.defaultReps, 0, MAX_REPS, 0),
+        defaultWeight: clampNumber(e.defaultWeight, 0, MAX_WEIGHT, 0),
       }))
       .filter((e) => e.name.length > 0)
+      .slice(0, MAX_EXERCISES)
     onSubmit({
       id: initial?.id,
       createdAt: initial?.createdAt,
-      name: name.trim(),
+      name: name.trim().slice(0, MAX_NAME),
       exercises: cleaned,
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <section className="sl-panel sl-pad-md">
         <header className="sl-section-head mb-4">
           <p className="sl-label">[ DATOS DE LA MISIÓN ]</p>
@@ -82,38 +103,45 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
           id="routine-name"
           className="sl-input"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Empuje · Pierna · Full body"
+          onChange={(e) => setName(e.target.value.slice(0, MAX_NAME))}
+          placeholder="Ej. Empuje · Pierna"
           required
+          maxLength={MAX_NAME}
           autoComplete="off"
         />
         <p className="mt-2 text-xs text-[var(--sl-text-dim)]">
-          Este nombre aparecerá en el HUD al iniciar combate.
+          Máx {MAX_NAME} caracteres · aparecerá en el HUD.
         </p>
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="flex flex-col items-stretch gap-3">
           <header className="sl-section-head min-w-0">
             <p className="sl-label sl-label-violet">[ OBJETIVOS ]</p>
             <h2 className="sl-title text-lg font-bold tracking-tight text-[var(--sl-text)]">
               Ejercicios de la misión
             </h2>
+            <p className="mt-1 text-xs text-[var(--sl-text-dim)]">
+              {exercises.length} / {MAX_EXERCISES} objetivos
+            </p>
           </header>
           <button
             type="button"
             onClick={addExercise}
-            className="sl-btn sl-btn-violet sl-btn-sm sl-focus w-full shrink-0 sm:w-auto"
+            disabled={exercises.length >= MAX_EXERCISES}
+            className="sl-btn sl-btn-violet sl-btn-sm sl-focus w-full"
           >
             <FiPlus className="h-4 w-4" aria-hidden />
-            Añadir objetivo
+            {exercises.length >= MAX_EXERCISES
+              ? 'Máximo alcanzado'
+              : 'Añadir objetivo'}
           </button>
         </div>
         <div className="sl-divider sl-divider-violet" />
 
         {exercises.map((ex, i) => (
           <div key={ex.id} className="sl-panel sl-pad-sm sl-animate-in">
-            <div className="mb-4 flex items-start gap-3">
+            <div className="mb-4 flex items-start gap-2">
               <div className="min-w-0 flex-1">
                 <p className="sl-label sl-label-tight text-[var(--sl-violet)]">
                   [ OBJETIVO {String(i + 1).padStart(2, '0')} ]
@@ -121,8 +149,11 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
                 <input
                   className="sl-input mt-2 font-semibold"
                   value={ex.name}
-                  onChange={(e) => updateExercise(i, { name: e.target.value })}
+                  onChange={(e) =>
+                    updateExercise(i, { name: e.target.value.slice(0, MAX_NAME) })
+                  }
                   placeholder="Nombre del ejercicio"
+                  maxLength={MAX_NAME}
                   aria-label={`Nombre ejercicio ${i + 1}`}
                 />
               </div>
@@ -137,44 +168,63 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-3 gap-2">
               <div>
                 <label className="sl-field-label">Series</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   min={1}
-                  className="sl-input sl-stat py-2.5 tabular-nums"
+                  max={MAX_PLANNED_SETS}
+                  className="sl-input sl-stat text-center font-bold tabular-nums"
                   value={ex.plannedSets}
                   onChange={(e) =>
-                    updateExercise(i, { plannedSets: Number(e.target.value) })
+                    updateExercise(i, {
+                      plannedSets: clampInt(
+                        e.target.value,
+                        1,
+                        MAX_PLANNED_SETS,
+                        1,
+                      ),
+                    })
                   }
                 />
               </div>
               <div>
-                <label className="sl-field-label">Reps base</label>
+                <label className="sl-field-label">Reps</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   min={0}
-                  className="sl-input sl-stat py-2.5 tabular-nums"
+                  max={MAX_REPS}
+                  className="sl-input sl-stat text-center font-bold tabular-nums"
                   value={ex.defaultReps}
                   onChange={(e) =>
-                    updateExercise(i, { defaultReps: Number(e.target.value) })
+                    updateExercise(i, {
+                      defaultReps: clampInt(e.target.value, 0, MAX_REPS, 0),
+                    })
                   }
                 />
               </div>
-              <div className="col-span-2 sm:col-span-1">
-                <label className="sl-field-label">Peso base (kg)</label>
+              <div>
+                <label className="sl-field-label">Peso</label>
                 <input
                   type="number"
                   inputMode="decimal"
                   min={0}
+                  max={MAX_WEIGHT}
                   step="0.5"
-                  className="sl-input sl-stat py-2.5 tabular-nums"
+                  className="sl-input sl-stat text-center font-bold tabular-nums"
                   value={ex.defaultWeight}
                   onChange={(e) =>
-                    updateExercise(i, { defaultWeight: Number(e.target.value) })
+                    updateExercise(i, {
+                      defaultWeight: clampNumber(
+                        e.target.value,
+                        0,
+                        MAX_WEIGHT,
+                        0,
+                      ),
+                    })
                   }
                 />
               </div>

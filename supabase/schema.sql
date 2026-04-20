@@ -77,9 +77,14 @@ create table if not exists public.sets (
   session_exercise_id  uuid not null references public.session_exercises(id) on delete cascade,
   position             int  not null,
   reps                 int  not null default 0 check (reps >= 0),
-  weight               numeric not null default 0 check (weight >= 0)
+  weight               numeric not null default 0 check (weight >= 0),
+  completed            boolean not null default false
 );
 create index if not exists idx_sets_session_ex on public.sets(session_exercise_id);
+
+-- Migración idempotente: si la columna 'completed' no existe (BD antigua), añadirla.
+alter table public.sets
+  add column if not exists completed boolean not null default false;
 
 -- --- friendships -------------------------------------------------------
 -- Invitaciones entre cazadores. Status: pending (enviada) | accepted.

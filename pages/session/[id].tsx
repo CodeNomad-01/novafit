@@ -2,13 +2,16 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FiArrowLeft,
   FiCheck,
   FiChevronDown,
   FiChevronUp,
   FiClock,
+  FiMinus,
+  FiPause,
+  FiPlay,
   FiPlus,
   FiTarget,
   FiX,
@@ -16,6 +19,23 @@ import {
 import { AppShell } from '@/components/AppShell'
 import { useNovaFit } from '@/lib/store/context'
 import { formatDurationMs } from '@/lib/domain/stats'
+
+const REST_KEY = 'novafit:rest-seconds'
+const DEFAULT_REST = 90
+const MIN_REST = 10
+const MAX_REST = 600
+
+function clampRest(n: number) {
+  if (!Number.isFinite(n)) return DEFAULT_REST
+  return Math.min(MAX_REST, Math.max(MIN_REST, Math.round(n)))
+}
+
+function formatSeconds(total: number) {
+  const s = Math.max(0, Math.ceil(total))
+  const m = Math.floor(s / 60)
+  const r = s % 60
+  return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`
+}
 
 export default function SessionPage() {
   const router = useRouter()
@@ -25,15 +45,31 @@ export default function SessionPage() {
   const {
     hydrated,
     sessions,
-    activeSessionId,
     updateSet,
     addSetToExercise,
+    toggleSetCompleted,
     finishSession,
     cancelActiveSession,
   } = useNovaFit()
 
   const [tick, setTick] = useState(0)
   const [openExercise, setOpenExercise] = useState<number | null>(0)
+  const [restSeconds, setRestSeconds] = useState<number>(DEFAULT_REST)
+  const [restEndsAt, setRestEndsAt] = useState<number | null>(null)
+  const lastAlertRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(REST_KEY)
+      if (saved) setRestSeconds(clampRest(Number(saved)))
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(REST_KEY, String(restSeconds))
+    } catch {}
+  }, [restSeconds])
 
   const session = useMemo(
     () => sessions.find((s) => s.id === sessionId),
@@ -52,6 +88,35 @@ export default function SessionPage() {
       setOpenExercise((o) => (o === null || o > maxIdx ? 0 : o))
     }
   }, [session])
+
+  const restRemainingMs = restEndsAt !== null ? restEndsAt - Date.now() : 0
+  const restActive = restRemainingMs > 0
+
+  useEffect(() => {
+    if (!restActive && restEndsAt !== null) {
+      if (lastAlertRef.current !== restEndsAt) {
+        lastAlertRef.current = restEndsAt
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          try {
+            navigator.vibrate([80, 60, 120])
+          } catch {}
+        }
+      }
+    }
+  }, [restActive, restEndsAt])
+
+  const handleToggleSet = useCallback(
+    async (exIdx: number, setIdx: number, currentlyDone: boolean) => {
+      const nextDone = !currentlyDone
+      await toggleSetCompleted(sessionId, exIdx, setIdx, nextDone)
+      if (nextDone) {
+        setRestEndsAt(Date.now() + restSeconds * 1000)
+      } else {
+        setRestEndsAt(null)
+      }
+    },
+    [sessionId, restSeconds, toggleSetCompleted],
+  )
 
   if (!routeReady || !hydrated) {
     return (
@@ -89,10 +154,18 @@ export default function SessionPage() {
     : Date.now() - session.startedAt
 
   const totalEx = session.exercises.length
-  const currentStep =
-    openExercise !== null ? Math.min(openExercise + 1, totalEx) : 1
+  const totalSetsPlanned = session.exercises.reduce(
+    (acc, ex) => acc + ex.sets.length,
+    0,
+  )
+  const totalSetsDone = session.exercises.reduce(
+    (acc, ex) => acc + ex.sets.filter((s) => s.completed).length,
+    0,
+  )
   const progressPct =
-    totalEx > 0 ? Math.round((currentStep / totalEx) * 100) : 100
+    totalSetsPlanned > 0
+      ? Math.round((totalSetsDone / totalSetsPlanned) * 100)
+      : 0
 
   function toggleExercise(i: number) {
     setOpenExercise((o) => (o === i ? null : i))
@@ -116,8 +189,6 @@ export default function SessionPage() {
     }
   }
 
-  const isActive = activeSessionId === session.id && !isDone
-
   return (
     <AppShell
       eyebrow={isDone ? '[ BATTLE LOG ]' : '[ BATTLE · LIVE ]'}
@@ -125,38 +196,18 @@ export default function SessionPage() {
       subtitle={
         isDone
           ? 'Combate finalizado. Revisa el resumen y los registros por objetivo.'
-          : 'Edita peso y repeticiones en cada serie. Puedes añadir series extra.'
+          : 'Marca cada serie al terminarla; arrancará el cronómetro de descanso.'
       }
     >
-      <div className="space-y-6 pb-44 sm:space-y-8 md:pb-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="space-y-6 pb-52">
+        <div className="flex items-center justify-between gap-2">
           <Link
             href={isDone ? '/' : '/routines'}
             className="sl-focus sl-label inline-flex items-center gap-2 text-[var(--sl-text-dim)] hover:text-[var(--sl-cyan)]"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
-            {isDone ? 'Sistema' : 'Salir del combate'}
+            {isDone ? 'Sistema' : 'Salir'}
           </Link>
-          {!isDone && (
-            <div className="hidden items-center gap-2 md:flex">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="sl-btn sl-btn-ghost sl-btn-sm sl-focus"
-              >
-                <FiX className="h-4 w-4" aria-hidden />
-                Descartar
-              </button>
-              <button
-                type="button"
-                onClick={handleFinish}
-                className="sl-btn sl-btn-primary sl-btn-sm sl-focus"
-              >
-                <FiCheck className="h-4 w-4" aria-hidden />
-                Finalizar
-              </button>
-            </div>
-          )}
         </div>
 
         {/* HUD · CRONÓMETRO */}
@@ -170,35 +221,34 @@ export default function SessionPage() {
             aria-hidden
           />
           <div className="relative">
-            <p className="sl-label mb-4 inline-flex items-center gap-2">
+            <p className="sl-label sl-label-tight mb-3 inline-flex items-center gap-2">
               <FiClock className="h-4 w-4" aria-hidden />
-              [ CRONÓMETRO DE COMBATE ]
+              [ CRONÓMETRO ]
             </p>
             <p
               className="sl-stat sl-notif font-black tabular-nums text-[var(--sl-cyan)]"
-              style={{ fontSize: 'clamp(2.8rem, 10vw, 5.5rem)' }}
+              style={{ fontSize: 'clamp(2.4rem, 13vw, 4.6rem)' }}
               suppressHydrationWarning
             >
               {formatDurationMs(elapsed)}
             </p>
-            <div className="mx-auto mt-6 max-w-md">
+            <div className="mx-auto mt-4">
               {isDone ? (
                 <p className="sl-label sl-label-gold sl-label-tight">
-                  [ COMBATE COMPLETADO · {formatDurationMs(elapsed)} ]
+                  [ COMBATE COMPLETADO ]
                 </p>
               ) : (
-                <p className="sl-label text-[var(--sl-text-dim)]">
+                <p className="sl-label sl-label-tight text-[var(--sl-text-dim)]">
                   [ BATTLE · IN PROGRESS ]
                 </p>
               )}
             </div>
 
-            {/* Barra de progreso de objetivos */}
             {!isDone && (
-              <div className="mx-auto mt-6 max-w-md space-y-2">
+              <div className="mx-auto mt-5 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="sl-label">
-                    Objetivo {currentStep} / {totalEx}
+                  <span className="sl-label sl-label-tight">
+                    Series {totalSetsDone} / {totalSetsPlanned}
                   </span>
                   <span className="sl-stat text-[var(--sl-cyan)]">
                     {progressPct}%
@@ -215,15 +265,71 @@ export default function SessionPage() {
           </div>
         </div>
 
+        {/* CONFIG DESCANSO */}
+        {!isDone && (
+          <div className="sl-panel sl-pad-md">
+            <div className="sl-head-row">
+              <span className="sl-ico sl-ico-violet" aria-hidden>
+                <FiClock className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="sl-label sl-label-violet sl-label-tight">
+                  [ DESCANSO ENTRE SERIES ]
+                </p>
+                <p className="mt-1 text-xs text-[var(--sl-text-dim)]">
+                  Se inicia solo al marcar una serie.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setRestSeconds((v) => clampRest(v - 15))}
+                className="sl-btn sl-btn-ghost sl-btn-sm sl-focus !px-3"
+                aria-label="Restar 15 segundos"
+              >
+                <FiMinus className="h-4 w-4" aria-hidden />
+              </button>
+              <div className="min-w-0 flex-1">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={MIN_REST}
+                  max={MAX_REST}
+                  step={5}
+                  className="sl-input sl-stat text-center font-bold tabular-nums"
+                  value={restSeconds}
+                  onChange={(e) =>
+                    setRestSeconds(clampRest(Number(e.target.value)))
+                  }
+                  aria-label="Segundos de descanso"
+                />
+                <p className="sl-label sl-label-tight mt-1 text-center text-[var(--sl-muted)]">
+                  {formatSeconds(restSeconds)} min
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRestSeconds((v) => clampRest(v + 15))}
+                className="sl-btn sl-btn-ghost sl-btn-sm sl-focus !px-3"
+                aria-label="Sumar 15 segundos"
+              >
+                <FiPlus className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* OBJETIVOS · SERIES */}
         <div className="space-y-4">
           <header className="sl-section-head">
-            <p className="sl-label sl-label-violet">[ OBJECTIVES · SETS ]</p>
+            <p className="sl-label sl-label-violet">[ OBJETIVOS · SERIES ]</p>
           </header>
 
           {session.exercises.map((ex, ei) => {
             const open = openExercise === ei
             const setCount = ex.sets.length
+            const doneCount = ex.sets.filter((s) => s.completed).length
             return (
               <section
                 key={ex.id ?? (ex.exerciseTemplateId ?? '') + ei}
@@ -232,10 +338,10 @@ export default function SessionPage() {
                 <button
                   type="button"
                   onClick={() => toggleExercise(ei)}
-                  className="sl-focus flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[rgba(92,225,255,0.04)] md:pointer-events-none md:cursor-default md:hover:bg-transparent sm:px-5"
+                  className="sl-focus flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-[rgba(92,225,255,0.04)]"
                   aria-expanded={open}
                 >
-                  <span className="sl-ico sl-ico-lg sl-ico-violet sl-stat text-base font-bold">
+                  <span className="sl-ico sl-ico-violet sl-stat text-sm font-bold">
                     {String(ei + 1).padStart(2, '0')}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -243,15 +349,15 @@ export default function SessionPage() {
                       [ OBJETIVO {String(ei + 1).padStart(2, '0')} /{' '}
                       {String(totalEx).padStart(2, '0')} ]
                     </p>
-                    <h3 className="sl-title mt-1 truncate text-base font-bold text-[var(--sl-text)]">
+                    <h3 className="sl-title mt-1 truncate text-sm font-bold text-[var(--sl-text)]">
                       {ex.name}
                     </h3>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--sl-text-dim)]">
                       <FiTarget className="h-3 w-3 shrink-0" aria-hidden />
-                      {setCount} serie{setCount === 1 ? '' : 's'}
+                      {doneCount} / {setCount} serie{setCount === 1 ? '' : 's'}
                     </p>
                   </div>
-                  <span className="shrink-0 text-[var(--sl-text-dim)] md:hidden">
+                  <span className="shrink-0 text-[var(--sl-text-dim)]">
                     {open ? (
                       <FiChevronUp className="h-5 w-5" aria-hidden />
                     ) : (
@@ -260,171 +366,123 @@ export default function SessionPage() {
                   </span>
                 </button>
 
-                <div
-                  className={`border-t border-[var(--sl-border)] px-4 pb-5 pt-4 sm:px-5 ${
-                    open ? 'block' : 'hidden sm:block'
-                  }`}
-                >
-                  {!isDone && (
-                    <div className="mb-4 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => addSetToExercise(session.id, ei)}
-                        className="sl-btn sl-btn-violet sl-btn-sm sl-focus"
-                      >
-                        <FiPlus className="h-4 w-4" aria-hidden />
-                        Añadir serie
-                      </button>
-                    </div>
-                  )}
+                {open && (
+                  <div className="border-t border-[var(--sl-border)] px-3 pb-4 pt-3">
+                    <ul className="space-y-3">
+                      {ex.sets.map((st, si) => {
+                        const done = st.completed
+                        return (
+                          <li
+                            key={st.id}
+                            className={`sl-corners border p-3 transition ${
+                              done
+                                ? 'border-[var(--sl-cyan)]/60 bg-[rgba(92,225,255,0.08)]'
+                                : 'border-[var(--sl-border)] bg-[rgba(5,10,24,0.6)]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleSet(ei, si, done)}
+                                disabled={isDone}
+                                className={`sl-check-btn sl-focus ${done ? 'is-done' : ''}`}
+                                aria-pressed={done}
+                                aria-label={
+                                  done
+                                    ? `Desmarcar serie ${si + 1}`
+                                    : `Marcar serie ${si + 1} como completada`
+                                }
+                              >
+                                {done ? (
+                                  <FiCheck className="h-4 w-4" aria-hidden />
+                                ) : (
+                                  <span className="sl-stat text-[0.72rem] font-bold">
+                                    {si + 1}
+                                  </span>
+                                )}
+                              </button>
+                              <p className="sl-label sl-label-tight flex-1">
+                                SERIE {String(si + 1).padStart(2, '0')}
+                              </p>
+                              {done && (
+                                <span className="sl-chip">
+                                  <FiCheck className="h-3 w-3" aria-hidden />
+                                  OK
+                                </span>
+                              )}
+                            </div>
 
-                  {/* Tabla en desktop */}
-                  <div className="hidden sm:block">
-                    <div className="sl-corners overflow-hidden border border-[var(--sl-border)] bg-[rgba(5,10,24,0.6)]">
-                      <table className="w-full table-fixed text-sm">
-                        <colgroup>
-                          <col className="w-16 md:w-20" />
-                          <col />
-                          <col />
-                        </colgroup>
-                        <thead>
-                          <tr className="border-b border-[var(--sl-border)] text-left">
-                            <th className="sl-label sl-label-tight px-3 py-3 sm:px-4">Set</th>
-                            <th className="sl-label sl-label-tight px-2 py-3 sm:px-3">
-                              Peso · kg
-                            </th>
-                            <th className="sl-label sl-label-tight px-2 py-3 pr-3 sm:px-3 sm:pr-4">
-                              Reps
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {ex.sets.map((st, si) => (
-                            <tr
-                              key={st.id}
-                              className="border-t border-[var(--sl-border)]/80 transition hover:bg-[rgba(92,225,255,0.04)]"
-                            >
-                              <td className="sl-stat px-3 py-2.5 text-sm font-bold text-[var(--sl-cyan)] sm:px-4">
-                                {String(si + 1).padStart(2, '0')}
-                              </td>
-                              <td className="px-2 py-2 sm:px-3">
+                            <div className="mt-3 grid grid-cols-2 gap-2.5">
+                              <div>
+                                <label className="sl-field-label">
+                                  Peso · kg
+                                </label>
                                 <input
                                   type="number"
                                   inputMode="decimal"
                                   min={0}
+                                  max={1000}
                                   step="0.5"
                                   disabled={isDone}
-                                  aria-label={`Peso serie ${si + 1}`}
-                                  className="sl-input sl-stat py-2 text-center font-bold tabular-nums disabled:cursor-not-allowed disabled:opacity-55 sm:py-2.5"
+                                  className="sl-input sl-stat py-3 text-center font-bold tabular-nums disabled:opacity-55"
                                   value={st.weight}
                                   onChange={(e) =>
                                     updateSet(session.id, ei, si, {
-                                      weight: Number(e.target.value),
+                                      weight: Math.min(
+                                        1000,
+                                        Math.max(0, Number(e.target.value) || 0),
+                                      ),
                                     })
                                   }
                                 />
-                              </td>
-                              <td className="px-2 py-2 pr-3 sm:px-3 sm:pr-4">
+                              </div>
+                              <div>
+                                <label className="sl-field-label">Reps</label>
                                 <input
                                   type="number"
                                   inputMode="numeric"
                                   min={0}
+                                  max={200}
                                   disabled={isDone}
-                                  aria-label={`Reps serie ${si + 1}`}
-                                  className="sl-input sl-stat py-2 text-center font-bold tabular-nums disabled:cursor-not-allowed disabled:opacity-55 sm:py-2.5"
+                                  className="sl-input sl-stat py-3 text-center font-bold tabular-nums disabled:opacity-55"
                                   value={st.reps}
                                   onChange={(e) =>
                                     updateSet(session.id, ei, si, {
-                                      reps: Number(e.target.value),
+                                      reps: Math.min(
+                                        200,
+                                        Math.max(0, Number(e.target.value) || 0),
+                                      ),
                                     })
                                   }
                                 />
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                              </div>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
 
-                  {/* Tarjetas en móvil */}
-                  <ul className="space-y-3 sm:hidden">
-                    {ex.sets.map((st, si) => (
-                      <li
-                        key={st.id}
-                        className="sl-corners border border-[var(--sl-border)] bg-[rgba(5,10,24,0.6)] p-3"
-                      >
-                        <p className="sl-label mb-3 text-center">
-                          SET {String(si + 1).padStart(2, '0')}
-                        </p>
-                        <div className="grid grid-cols-2 gap-2.5">
-                          <div>
-                            <label className="sl-field-label">Peso · kg</label>
-                            <input
-                              type="number"
-                              inputMode="decimal"
-                              min={0}
-                              step="0.5"
-                              disabled={isDone}
-                              className="sl-input sl-stat py-3 text-center font-bold tabular-nums disabled:opacity-55"
-                              value={st.weight}
-                              onChange={(e) =>
-                                updateSet(session.id, ei, si, {
-                                  weight: Number(e.target.value),
-                                })
-                              }
-                            />
-                          </div>
-                          <div>
-                            <label className="sl-field-label">Reps</label>
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min={0}
-                              disabled={isDone}
-                              className="sl-input sl-stat py-3 text-center font-bold tabular-nums disabled:opacity-55"
-                              value={st.reps}
-                              onChange={(e) =>
-                                updateSet(session.id, ei, si, {
-                                  reps: Number(e.target.value),
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                    {!isDone && (
+                      <div className="mt-4">
+                        <button
+                          type="button"
+                          onClick={() => addSetToExercise(session.id, ei)}
+                          disabled={setCount >= 20}
+                          className="sl-btn sl-btn-violet sl-btn-sm sl-focus w-full"
+                        >
+                          <FiPlus className="h-4 w-4" aria-hidden />
+                          {setCount >= 20
+                            ? 'Máximo 20 series'
+                            : 'Añadir serie extra'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
             )
           })}
         </div>
-
-        {/* ACCIONES FIJAS MÓVIL */}
-        {!isDone && (
-          <div className="fixed bottom-[4.25rem] left-0 right-0 z-30 border-t border-[var(--sl-cyan)]/30 bg-[rgba(3,5,13,0.96)] p-4 backdrop-blur-xl md:hidden">
-            <div className="sl-divider absolute inset-x-0 top-0" />
-            <div className="mx-auto flex max-w-lg flex-col gap-2">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="sl-btn sl-btn-ghost sl-focus"
-              >
-                <FiX className="h-4 w-4" aria-hidden />
-                Descartar
-              </button>
-              <button
-                type="button"
-                onClick={handleFinish}
-                className="sl-btn sl-btn-primary sl-focus py-4"
-              >
-                <FiCheck className="h-5 w-5" aria-hidden />
-                Finalizar combate
-              </button>
-            </div>
-          </div>
-        )}
 
         {isDone && (
           <div className="flex justify-center pt-2">
@@ -433,13 +491,146 @@ export default function SessionPage() {
             </Link>
           </div>
         )}
-
-        {isActive && (
-          <p className="sl-label text-center text-[0.65rem] text-[var(--sl-muted)] md:hidden">
-            [ Barra de acciones fijada en pantalla ]
-          </p>
-        )}
       </div>
+
+      {/* HUD FLOTANTE DE DESCANSO */}
+      {!isDone && restActive && (
+        <RestHud
+          endsAt={restEndsAt!}
+          onCancel={() => setRestEndsAt(null)}
+          onAddTime={(delta) =>
+            setRestEndsAt((prev) =>
+              prev !== null ? prev + delta * 1000 : prev,
+            )
+          }
+        />
+      )}
+
+      {/* ACCIONES FIJAS MÓVIL */}
+      {!isDone && (
+        <div
+          className="fixed bottom-0 left-1/2 z-40 w-full -translate-x-1/2 border-t border-[var(--sl-cyan)]/30 bg-[rgba(3,5,13,0.95)] p-3 backdrop-blur-xl"
+          style={{
+            maxWidth: 'var(--sl-app-max)',
+            marginBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4.5rem)',
+          }}
+        >
+          <div className="sl-divider absolute inset-x-0 top-0 opacity-60" />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="sl-btn sl-btn-ghost sl-focus flex-1"
+            >
+              <FiX className="h-4 w-4" aria-hidden />
+              Descartar
+            </button>
+            <button
+              type="button"
+              onClick={handleFinish}
+              className="sl-btn sl-btn-primary sl-focus flex-1"
+            >
+              <FiCheck className="h-4 w-4" aria-hidden />
+              Finalizar
+            </button>
+          </div>
+        </div>
+      )}
     </AppShell>
+  )
+}
+
+function RestHud({
+  endsAt,
+  onCancel,
+  onAddTime,
+}: {
+  endsAt: number
+  onCancel: () => void
+  onAddTime: (deltaSec: number) => void
+}) {
+  const [, force] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const pauseTsRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (paused) return undefined
+    const id = window.setInterval(() => force((x) => x + 1), 250)
+    return () => clearInterval(id)
+  }, [paused])
+
+  const remaining = Math.max(0, endsAt - Date.now())
+  const secs = Math.ceil(remaining / 1000)
+
+  const togglePause = () => {
+    if (paused && pauseTsRef.current !== null) {
+      const delta = Date.now() - pauseTsRef.current
+      onAddTime(delta / 1000)
+      pauseTsRef.current = null
+      setPaused(false)
+    } else {
+      pauseTsRef.current = Date.now()
+      setPaused(true)
+    }
+  }
+
+  return (
+    <div
+      className="pointer-events-none fixed left-1/2 z-50 w-full -translate-x-1/2 px-3"
+      style={{
+        maxWidth: 'var(--sl-app-max)',
+        bottom:
+          'calc(env(safe-area-inset-bottom, 0px) + 4.5rem + 4.25rem + 0.5rem)',
+      }}
+    >
+      <div className="pointer-events-auto sl-panel sl-panel-glow sl-pad-sm sl-animate-in">
+        <div className="flex items-center gap-3">
+          <span className="sl-ico sl-ico-violet shrink-0" aria-hidden>
+            <FiClock className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="sl-label sl-label-violet sl-label-tight">
+              [ DESCANSO ]
+            </p>
+            <p
+              className="sl-stat sl-violet-glow text-2xl font-black tabular-nums text-[var(--sl-violet)]"
+              suppressHydrationWarning
+            >
+              {formatSeconds(secs)}
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-1.5">
+            <button
+              type="button"
+              onClick={() => onAddTime(15)}
+              className="sl-btn sl-btn-ghost sl-btn-sm sl-focus !px-2.5"
+              aria-label="Añadir 15 segundos"
+            >
+              +15
+            </button>
+            <button
+              type="button"
+              onClick={togglePause}
+              className="sl-btn sl-btn-violet sl-btn-sm sl-focus !px-2.5"
+              aria-label={paused ? 'Reanudar' : 'Pausar'}
+            >
+              {paused ? (
+                <FiPlay className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <FiPause className="h-3.5 w-3.5" aria-hidden />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="sl-btn sl-btn-ghost sl-btn-sm sl-focus !px-2.5"
+              aria-label="Cerrar"
+            >
+              <FiX className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -57,6 +57,12 @@ type NovaFitContextValue = {
     patch: Partial<{ reps: number; weight: number }>,
   ) => Promise<void>
   addSetToExercise: (sessionId: string, exerciseIdx: number) => Promise<void>
+  toggleSetCompleted: (
+    sessionId: string,
+    exerciseIdx: number,
+    setIdx: number,
+    next?: boolean,
+  ) => Promise<void>
   finishSession: (sessionId: string) => Promise<void>
   cancelActiveSession: () => Promise<void>
   searchProfileByUsername: (q: string) => Promise<{
@@ -113,6 +119,7 @@ function rowToSession(s: SessionWithEx): WorkoutSession {
           id: st.id,
           reps: st.reps,
           weight: Number(st.weight),
+          completed: Boolean(st.completed),
         })),
     }))
   return {
@@ -134,6 +141,7 @@ function routineToSessionExercises(r: Routine): SessionExerciseLog[] {
       id: newId(),
       reps: ex.defaultReps,
       weight: ex.defaultWeight,
+      completed: false,
     })),
   }))
 }
@@ -481,7 +489,12 @@ export function NovaFitProvider({ children }: { children: ReactNode }) {
             sets: allSets
               .filter((st) => st.session_exercise_id === se.id)
               .sort((a, b) => a.position - b.position)
-              .map((st) => ({ id: st.id, reps: st.reps, weight: Number(st.weight) })),
+              .map((st) => ({
+                id: st.id,
+                reps: st.reps,
+                weight: Number(st.weight),
+                completed: Boolean(st.completed),
+              })),
           })),
         }
 
@@ -570,13 +583,15 @@ export function NovaFitProvider({ children }: { children: ReactNode }) {
       if (!session) return
       const ex = session.exercises[exerciseIdx]
       if (!ex) return
-      const last = ex.sets[ex.sets.length - 1]
-      const template = last ?? { id: newId(), reps: 10, weight: 0 }
-      const newSet: SetLog = {
-        id: newId(),
-        reps: template.reps,
-        weight: template.weight,
-      }
+    if (ex.sets.length >= 20) return
+    const last = ex.sets[ex.sets.length - 1]
+    const template = last ?? { id: newId(), reps: 10, weight: 0 }
+    const newSet: SetLog = {
+      id: newId(),
+      reps: template.reps,
+      weight: template.weight,
+      completed: false,
+    }
       const position = ex.sets.length
       setState((s) => ({
         ...s,
@@ -597,6 +612,7 @@ export function NovaFitProvider({ children }: { children: ReactNode }) {
         position,
         reps: newSet.reps,
         weight: newSet.weight,
+        completed: false,
       })
       if (error) {
         console.error('[store] addSet:', error)
@@ -618,6 +634,65 @@ export function NovaFitProvider({ children }: { children: ReactNode }) {
       }
     },
     [state.sessions],
+  )
+
+  const toggleSetCompleted = useCallback(
+    async (
+      sessionId: string,
+      exerciseIdx: number,
+      setIdx: number,
+      next?: boolean,
+    ) => {
+      let setId: string | null = null
+      let target: boolean | null = null
+      setState((s) => ({
+        ...s,
+        sessions: s.sessions.map((sess) => {
+          if (sess.id !== sessionId) return sess
+          const exercises = sess.exercises.map((ex, ei) => {
+            if (ei !== exerciseIdx) return ex
+            const sets = ex.sets.map((st, si) => {
+              if (si !== setIdx) return st
+              setId = st.id
+              const nextVal = next ?? !st.completed
+              target = nextVal
+              return { ...st, completed: nextVal }
+            })
+            return { ...ex, sets }
+          })
+          return { ...sess, exercises }
+        }),
+      }))
+
+      if (!setId || target === null) return
+      const { error } = await supabase
+        .from('sets')
+        .update({ completed: target })
+        .eq('id', setId)
+      if (error) {
+        console.error('[store] toggleSetCompleted:', error)
+        setError(error.message)
+        setState((s) => ({
+          ...s,
+          sessions: s.sessions.map((sess) => {
+            if (sess.id !== sessionId) return sess
+            return {
+              ...sess,
+              exercises: sess.exercises.map((ex, ei) => {
+                if (ei !== exerciseIdx) return ex
+                return {
+                  ...ex,
+                  sets: ex.sets.map((st, si) =>
+                    si === setIdx ? { ...st, completed: !target } : st,
+                  ),
+                }
+              }),
+            }
+          }),
+        }))
+      }
+    },
+    [],
   )
 
   const finishSession = useCallback(async (sessionId: string) => {
@@ -903,6 +978,7 @@ export function NovaFitProvider({ children }: { children: ReactNode }) {
       startSessionFromRoutine,
       updateSet,
       addSetToExercise,
+      toggleSetCompleted,
       finishSession,
       cancelActiveSession,
       searchProfileByUsername,
@@ -929,6 +1005,7 @@ export function NovaFitProvider({ children }: { children: ReactNode }) {
       startSessionFromRoutine,
       updateSet,
       addSetToExercise,
+      toggleSetCompleted,
       finishSession,
       cancelActiveSession,
       searchProfileByUsername,

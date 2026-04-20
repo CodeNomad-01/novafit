@@ -51,6 +51,7 @@ export type SetRow = {
   position: number
   reps: number
   weight: number
+  completed: boolean
 }
 
 export type FriendshipRow = {

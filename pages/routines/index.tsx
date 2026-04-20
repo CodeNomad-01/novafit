@@ -14,13 +14,13 @@ export default function RoutinesPage() {
       title="Tablero de misiones"
       subtitle="Define plantillas de entreno. Cada misión contiene objetivos (ejercicios) con series base. Al comenzar, se activa el cronómetro de combate."
     >
-      <div className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="mb-6 flex flex-col items-stretch gap-3">
         <p className="sl-label">
           [ {routines.length.toString().padStart(2, '0')} MISIONES REGISTRADAS ]
         </p>
         <Link
           href="/routines/new"
-          className="sl-btn sl-btn-primary sl-focus w-full sm:w-auto"
+          className="sl-btn sl-btn-primary sl-focus w-full"
         >
           <FiPlus className="h-4 w-4" aria-hidden />
           Nueva misión
@@ -62,7 +62,7 @@ export default function RoutinesPage() {
               <li key={r.id} className="sl-animate-in">
                 <Link
                   href={`/routines/${r.id}`}
-                  className="sl-focus sl-panel group flex items-center gap-4 px-4 py-4 transition hover:border-[var(--sl-cyan)]/60 hover:bg-[rgba(92,225,255,0.05)] sm:px-5"
+                  className="sl-focus sl-panel group flex items-center gap-3 px-3 py-3 transition hover:border-[var(--sl-cyan)]/60 hover:bg-[rgba(92,225,255,0.05)]"
                 >
                   <span className="sl-ico sl-ico-lg sl-stat text-base font-bold">
                     {String(i + 1).padStart(2, '0')}
@@ -78,7 +78,6 @@ export default function RoutinesPage() {
                       <span className="ml-1">· Pulsa para ver detalles</span>
                     </p>
                   </div>
-                  <span className="sl-chip hidden sm:inline-flex">Entrar</span>
                   <FiChevronRight
                     className="h-5 w-5 shrink-0 text-[var(--sl-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--sl-cyan)]"
                     aria-hidden

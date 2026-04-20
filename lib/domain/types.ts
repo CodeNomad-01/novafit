@@ -23,6 +23,7 @@ export interface SetLog {
   id: string
   reps: number
   weight: number
+  completed: boolean
 }
 
 export interface SessionExerciseLog {
