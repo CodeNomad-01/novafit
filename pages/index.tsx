@@ -73,18 +73,18 @@ export default function Home() {
           </header>
 
           <div className="sl-panel sl-panel-glow sl-pad-lg relative">
-            <div className="relative z-10 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-10">
-              <div className="space-y-6">
+            <div className="relative z-10 grid gap-6 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-10">
+              <div className="min-w-0 space-y-6">
                 <div className="space-y-3">
                   <p className="sl-label sl-label-violet">
                     [ {greeting.toUpperCase()} ]
                   </p>
-                  <h1 className="sl-title text-3xl font-black leading-[1.1] text-[var(--sl-text)] sl-flicker sm:text-4xl md:text-5xl">
+                  <h1 className="sl-title text-2xl font-black leading-[1.1] text-[var(--sl-text)] sl-flicker sm:text-4xl md:text-5xl break-words">
                     BIENVENIDO,
                     <br />
                     <span className="sl-notif">{hunterName.toUpperCase()}</span>
                   </h1>
-                  <p className="max-w-[52ch] text-[15px] leading-relaxed text-[var(--sl-text-dim)]">
+                  <p className="max-w-[52ch] text-sm leading-relaxed text-[var(--sl-text-dim)] sm:text-[15px]">
                     Has entrado en tu{' '}
                     <span className="text-[var(--sl-cyan)]">Sistema</span>.
                     Completa misiones, acumula poder y sube de rango como
@@ -92,15 +92,15 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <Link
                     href="/routines/new"
-                    className="sl-btn sl-btn-primary sl-focus"
+                    className="sl-btn sl-btn-primary sl-focus w-full sm:w-auto"
                   >
                     <FiZap className="h-4 w-4" aria-hidden />
                     Nueva misión
                   </Link>
-                  <Link href="/routines" className="sl-btn sl-focus">
+                  <Link href="/routines" className="sl-btn sl-focus w-full sm:w-auto">
                     <FiMap className="h-4 w-4" aria-hidden />
                     Ir a misiones
                   </Link>
@@ -139,9 +139,9 @@ export default function Home() {
                 />
                 <div className="relative">
                   <p className="sl-label">[ HUNTER RANK ]</p>
-                  <div className="mt-5 flex items-center gap-5">
+                  <div className="mt-5 flex items-center gap-4 sm:gap-5">
                     <div
-                      className="relative flex h-24 w-24 shrink-0 items-center justify-center border-2"
+                      className="relative flex h-20 w-20 shrink-0 items-center justify-center border-2 sm:h-24 sm:w-24"
                       style={{
                         borderColor: rank.color,
                         clipPath:
@@ -152,7 +152,7 @@ export default function Home() {
                       aria-hidden
                     >
                       <span
-                        className="sl-title text-4xl font-black"
+                        className="sl-title text-3xl font-black sm:text-4xl"
                         style={{
                           color: rank.color,
                           textShadow: `0 0 14px ${rank.color}cc`,
@@ -211,7 +211,7 @@ export default function Home() {
           <header className="sl-section-head mb-4">
             <p className="sl-label">[ WEEKLY STATS · 7 DÍAS ]</p>
           </header>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               icon={<FiTrendingUp className="h-5 w-5" />}
               labelText="Poder semanal"
@@ -243,7 +243,7 @@ export default function Home() {
         <section className="grid gap-6 lg:grid-cols-2 lg:gap-8">
           <div className="sl-panel sl-pad-md flex flex-col">
             <header className="sl-section-head flex items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="sl-label">[ QUEST BOARD ]</p>
                 <h2 className="sl-title text-lg font-bold text-[var(--sl-text)]">
                   Misiones guardadas
@@ -256,7 +256,7 @@ export default function Home() {
               </div>
               <Link
                 href="/routines/new"
-                className="sl-focus sl-label shrink-0 text-[var(--sl-cyan)] hover:text-[var(--sl-cyan)]"
+                className="sl-focus sl-label shrink-0 whitespace-nowrap text-[var(--sl-cyan)] hover:text-[var(--sl-cyan)]"
               >
                 + Nueva
               </Link>
@@ -443,14 +443,14 @@ function StatCard({
         </span>
         <div className="min-w-0 flex-1">
           <p
-            className="sl-label text-[0.65rem]"
+            className="sl-label sl-label-tight"
             style={{ color: s.color, textShadow: `0 0 10px ${s.color}55` }}
           >
             {labelText}
           </p>
-          <p className="sl-stat mt-1.5 text-2xl font-black leading-none text-[var(--sl-text)]">
+          <p className="sl-stat mt-1.5 break-words text-xl font-black leading-none text-[var(--sl-text)] sm:text-2xl">
             {value}{' '}
-            <span className="ml-0.5 text-sm font-semibold text-[var(--sl-text-dim)]">
+            <span className="ml-0.5 text-xs font-semibold text-[var(--sl-text-dim)] sm:text-sm">
               {unit}
             </span>
           </p>

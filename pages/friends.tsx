@@ -229,7 +229,7 @@ export default function FriendsPage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="fn" className="sl-label mb-2 block text-[0.65rem]">
+              <label htmlFor="fn" className="sl-field-label">
                 Nombre visible
               </label>
               <input
@@ -246,21 +246,19 @@ export default function FriendsPage() {
               />
             </div>
             <div>
-              <span className="sl-label mb-2 block text-[0.65rem]">
-                Código de cazador
-              </span>
+              <span className="sl-field-label">Código de cazador</span>
               <div className="flex gap-2">
-                <code className="sl-input sl-stat flex flex-1 items-center text-lg font-black tracking-[0.35em] text-[var(--sl-cyan)] sl-notif">
+                <code className="sl-input sl-stat sl-notif flex min-w-0 flex-1 items-center overflow-hidden text-base font-black tracking-[0.2em] text-[var(--sl-cyan)] sm:text-lg sm:tracking-[0.3em]">
                   {profile.friendCode}
                 </code>
                 <button
                   type="button"
                   onClick={copyUsername}
-                  className="sl-btn sl-btn-ghost sl-btn-sm sl-focus shrink-0 px-4"
+                  className="sl-btn sl-btn-ghost sl-btn-sm sl-focus shrink-0 px-3 sm:px-4"
                   title="Copiar código"
                   aria-label="Copiar código"
                 >
-                  <FiCopy className="h-5 w-5" aria-hidden />
+                  <FiCopy className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
                 </button>
               </div>
             </div>
@@ -292,9 +290,7 @@ export default function FriendsPage() {
 
             <form onSubmit={handleSearch} className="flex flex-col gap-3">
               <div>
-                <label className="sl-label mb-2 block text-[0.65rem]">
-                  Usuario
-                </label>
+                <label className="sl-field-label">Usuario</label>
                 <div className="relative">
                   <span
                     className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--sl-muted)]"
@@ -315,7 +311,7 @@ export default function FriendsPage() {
               <button
                 type="submit"
                 disabled={searching}
-                className="sl-btn sl-btn-violet sl-focus"
+                className="sl-btn sl-btn-violet sl-focus w-full"
               >
                 {searching ? 'Escaneando...' : 'Escanear sistema'}
               </button>
@@ -330,9 +326,9 @@ export default function FriendsPage() {
 
             {searchResult && (
               <div className="sl-corners mt-4 border border-[var(--sl-cyan)]/45 bg-[rgba(92,225,255,0.08)] p-4 sl-animate-in">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <span
-                    className="sl-title flex h-11 w-11 items-center justify-center border-2 text-base font-black"
+                    className="sl-title flex h-11 w-11 shrink-0 items-center justify-center border-2 text-base font-black"
                     style={{
                       borderColor: searchResult.avatarColor,
                       color: searchResult.avatarColor,
@@ -356,7 +352,7 @@ export default function FriendsPage() {
                   <button
                     type="button"
                     onClick={handleSendRequest}
-                    className="sl-btn sl-btn-primary sl-btn-sm sl-focus shrink-0"
+                    className="sl-btn sl-btn-primary sl-btn-sm sl-focus w-full sm:w-auto"
                   >
                     <FiCheck className="h-4 w-4" aria-hidden />
                     Invitar
@@ -520,10 +516,10 @@ export default function FriendsPage() {
                 {friends.map((f) => (
                   <li
                     key={f.id}
-                    className="sl-corners flex items-start gap-3 border border-[var(--sl-border)] bg-[rgba(8,14,30,0.5)] p-4"
+                    className="sl-corners flex items-start gap-3 border border-[var(--sl-border)] bg-[rgba(8,14,30,0.5)] p-3 sm:p-4"
                   >
                     <span
-                      className="sl-title flex h-11 w-11 shrink-0 items-center justify-center border-2 text-base font-black"
+                      className="sl-title flex h-10 w-10 shrink-0 items-center justify-center border-2 text-sm font-black sm:h-11 sm:w-11 sm:text-base"
                       style={{
                         borderColor: f.avatarColor,
                         color: f.avatarColor,
@@ -542,25 +538,25 @@ export default function FriendsPage() {
                       </p>
                       <p className="truncate text-xs text-[var(--sl-text-dim)]">
                         @{f.username} ·{' '}
-                        <span className="sl-stat font-mono tracking-widest text-[var(--sl-cyan)]">
+                        <span className="sl-stat font-mono tracking-[0.15em] text-[var(--sl-cyan)]">
                           {f.friendCode}
                         </span>
                       </p>
                       {f.stats ? (
-                        <p className="pt-1 text-xs text-[var(--sl-text-dim)]">
+                        <p className="break-words pt-1 text-xs text-[var(--sl-text-dim)]">
                           <span className="sl-stat text-[var(--sl-text)]">
                             {Math.round(f.stats.weeklyVolumeKg).toLocaleString(
                               'es',
                             )}
                           </span>{' '}
-                          kg poder ·{' '}
+                          kg ·{' '}
                           <span className="sl-stat text-[var(--sl-text)]">
                             {f.stats.sessionsLast7Days}
                           </span>{' '}
                           misiones
                         </p>
                       ) : (
-                        <p className="sl-label pt-1 text-[var(--sl-muted)]">
+                        <p className="sl-label sl-label-tight pt-1 text-[var(--sl-muted)]">
                           [ SIN ACTIVIDAD RECIENTE ]
                         </p>
                       )}

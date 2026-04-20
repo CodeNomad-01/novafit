@@ -128,7 +128,7 @@ export default function SessionPage() {
           : 'Edita peso y repeticiones en cada serie. Puedes añadir series extra.'
       }
     >
-      <div className="space-y-8 pb-28 md:pb-6">
+      <div className="space-y-6 pb-44 sm:space-y-8 md:pb-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href={isDone ? '/' : '/routines'}
@@ -183,7 +183,7 @@ export default function SessionPage() {
             </p>
             <div className="mx-auto mt-6 max-w-md">
               {isDone ? (
-                <p className="sl-label sl-label-gold">
+                <p className="sl-label sl-label-gold sl-label-tight">
                   [ COMBATE COMPLETADO · {formatDurationMs(elapsed)} ]
                 </p>
               ) : (
@@ -239,7 +239,7 @@ export default function SessionPage() {
                     {String(ei + 1).padStart(2, '0')}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="sl-label text-[0.6rem]">
+                    <p className="sl-label sl-label-tight">
                       [ OBJETIVO {String(ei + 1).padStart(2, '0')} /{' '}
                       {String(totalEx).padStart(2, '0')} ]
                     </p>
@@ -247,7 +247,7 @@ export default function SessionPage() {
                       {ex.name}
                     </h3>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--sl-text-dim)]">
-                      <FiTarget className="h-3 w-3" aria-hidden />
+                      <FiTarget className="h-3 w-3 shrink-0" aria-hidden />
                       {setCount} serie{setCount === 1 ? '' : 's'}
                     </p>
                   </div>
@@ -283,15 +283,19 @@ export default function SessionPage() {
                     <div className="sl-corners overflow-hidden border border-[var(--sl-border)] bg-[rgba(5,10,24,0.6)]">
                       <table className="w-full table-fixed text-sm">
                         <colgroup>
-                          <col style={{ width: '4.5rem' }} />
+                          <col className="w-16 md:w-20" />
                           <col />
                           <col />
                         </colgroup>
                         <thead>
                           <tr className="border-b border-[var(--sl-border)] text-left">
-                            <th className="sl-label px-4 py-3">Set</th>
-                            <th className="sl-label px-3 py-3">Peso · kg</th>
-                            <th className="sl-label px-3 py-3 pr-4">Reps</th>
+                            <th className="sl-label sl-label-tight px-3 py-3 sm:px-4">Set</th>
+                            <th className="sl-label sl-label-tight px-2 py-3 sm:px-3">
+                              Peso · kg
+                            </th>
+                            <th className="sl-label sl-label-tight px-2 py-3 pr-3 sm:px-3 sm:pr-4">
+                              Reps
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -300,17 +304,18 @@ export default function SessionPage() {
                               key={st.id}
                               className="border-t border-[var(--sl-border)]/80 transition hover:bg-[rgba(92,225,255,0.04)]"
                             >
-                              <td className="sl-stat px-4 py-2.5 text-sm font-bold text-[var(--sl-cyan)]">
+                              <td className="sl-stat px-3 py-2.5 text-sm font-bold text-[var(--sl-cyan)] sm:px-4">
                                 {String(si + 1).padStart(2, '0')}
                               </td>
-                              <td className="px-3 py-2">
+                              <td className="px-2 py-2 sm:px-3">
                                 <input
                                   type="number"
+                                  inputMode="decimal"
                                   min={0}
                                   step="0.5"
                                   disabled={isDone}
                                   aria-label={`Peso serie ${si + 1}`}
-                                  className="sl-input sl-stat py-2.5 text-center font-bold tabular-nums disabled:cursor-not-allowed disabled:opacity-55"
+                                  className="sl-input sl-stat py-2 text-center font-bold tabular-nums disabled:cursor-not-allowed disabled:opacity-55 sm:py-2.5"
                                   value={st.weight}
                                   onChange={(e) =>
                                     updateSet(session.id, ei, si, {
@@ -319,13 +324,14 @@ export default function SessionPage() {
                                   }
                                 />
                               </td>
-                              <td className="px-3 py-2 pr-4">
+                              <td className="px-2 py-2 pr-3 sm:px-3 sm:pr-4">
                                 <input
                                   type="number"
+                                  inputMode="numeric"
                                   min={0}
                                   disabled={isDone}
                                   aria-label={`Reps serie ${si + 1}`}
-                                  className="sl-input sl-stat py-2.5 text-center font-bold tabular-nums disabled:cursor-not-allowed disabled:opacity-55"
+                                  className="sl-input sl-stat py-2 text-center font-bold tabular-nums disabled:cursor-not-allowed disabled:opacity-55 sm:py-2.5"
                                   value={st.reps}
                                   onChange={(e) =>
                                     updateSet(session.id, ei, si, {
@@ -346,18 +352,17 @@ export default function SessionPage() {
                     {ex.sets.map((st, si) => (
                       <li
                         key={st.id}
-                        className="sl-corners border border-[var(--sl-border)] bg-[rgba(5,10,24,0.6)] p-4"
+                        className="sl-corners border border-[var(--sl-border)] bg-[rgba(5,10,24,0.6)] p-3"
                       >
                         <p className="sl-label mb-3 text-center">
                           SET {String(si + 1).padStart(2, '0')}
                         </p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2.5">
                           <div>
-                            <label className="sl-label mb-2 block text-[0.6rem]">
-                              Peso · kg
-                            </label>
+                            <label className="sl-field-label">Peso · kg</label>
                             <input
                               type="number"
+                              inputMode="decimal"
                               min={0}
                               step="0.5"
                               disabled={isDone}
@@ -371,11 +376,10 @@ export default function SessionPage() {
                             />
                           </div>
                           <div>
-                            <label className="sl-label mb-2 block text-[0.6rem]">
-                              Reps
-                            </label>
+                            <label className="sl-field-label">Reps</label>
                             <input
                               type="number"
+                              inputMode="numeric"
                               min={0}
                               disabled={isDone}
                               className="sl-input sl-stat py-3 text-center font-bold tabular-nums disabled:opacity-55"

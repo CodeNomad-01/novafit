@@ -14,11 +14,14 @@ export default function RoutinesPage() {
       title="Tablero de misiones"
       subtitle="Define plantillas de entreno. Cada misión contiene objetivos (ejercicios) con series base. Al comenzar, se activa el cronómetro de combate."
     >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p className="sl-label">
           [ {routines.length.toString().padStart(2, '0')} MISIONES REGISTRADAS ]
         </p>
-        <Link href="/routines/new" className="sl-btn sl-btn-primary sl-focus">
+        <Link
+          href="/routines/new"
+          className="sl-btn sl-btn-primary sl-focus w-full sm:w-auto"
+        >
           <FiPlus className="h-4 w-4" aria-hidden />
           Nueva misión
         </Link>

@@ -114,7 +114,7 @@ export default function AccountPage() {
           <header className="sl-section-head mb-5">
             <div className="sl-head-row">
               <span
-                className="flex h-16 w-16 shrink-0 items-center justify-center border-2 text-2xl sl-title font-black"
+                className="flex h-14 w-14 shrink-0 items-center justify-center border-2 text-xl sl-title font-black sm:h-16 sm:w-16 sm:text-2xl"
                 style={{
                   borderColor: user.avatarColor,
                   color: user.avatarColor,
@@ -128,12 +128,12 @@ export default function AccountPage() {
               >
                 {user.displayName.charAt(0).toUpperCase()}
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="sl-label">[ IDENTITY ]</p>
-                <h2 className="sl-title truncate text-xl font-bold text-[var(--sl-text)]">
+                <h2 className="sl-title truncate text-lg font-bold text-[var(--sl-text)] sm:text-xl">
                   @{user.username}
                 </h2>
-                <p className="sl-stat mt-1 text-xs tracking-[0.3em] text-[var(--sl-cyan)]">
+                <p className="sl-stat mt-1 truncate text-xs tracking-[0.2em] text-[var(--sl-cyan)] sm:tracking-[0.3em]">
                   ID {user.friendCode}
                 </p>
               </div>
@@ -142,10 +142,7 @@ export default function AccountPage() {
 
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div>
-              <label
-                htmlFor="displayName"
-                className="sl-label mb-2 block text-[0.65rem]"
-              >
+              <label htmlFor="displayName" className="sl-field-label">
                 Nombre visible
               </label>
               <input
@@ -157,10 +154,8 @@ export default function AccountPage() {
               />
             </div>
             <div>
-              <span className="sl-label mb-2 block text-[0.65rem]">
-                Email
-              </span>
-              <p className="sl-input sl-stat flex items-center text-sm tracking-wide text-[var(--sl-text-dim)]">
+              <span className="sl-field-label">Email</span>
+              <p className="sl-input sl-stat flex items-center overflow-hidden text-ellipsis whitespace-nowrap text-sm tracking-wide text-[var(--sl-text-dim)]">
                 {user.email ?? '—'}
               </p>
               <p className="mt-1.5 text-[0.7rem] text-[var(--sl-muted)]">
@@ -200,9 +195,7 @@ export default function AccountPage() {
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="sl-label mb-2 block text-[0.65rem]">
-                  Nueva contraseña
-                </label>
+                <label className="sl-field-label">Nueva contraseña</label>
                 <input
                   type="password"
                   className="sl-input"
@@ -214,9 +207,7 @@ export default function AccountPage() {
                 />
               </div>
               <div>
-                <label className="sl-label mb-2 block text-[0.65rem]">
-                  Repetir nueva
-                </label>
+                <label className="sl-field-label">Repetir nueva</label>
                 <input
                   type="password"
                   className="sl-input"

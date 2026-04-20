@@ -81,10 +81,7 @@ export default function RegisterPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label
-            htmlFor="username"
-            className="sl-label mb-2 block text-[0.65rem]"
-          >
+          <label htmlFor="username" className="sl-field-label">
             Usuario (identificador)
           </label>
           <div className="relative">
@@ -113,10 +110,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label
-            htmlFor="displayName"
-            className="sl-label mb-2 block text-[0.65rem]"
-          >
+          <label htmlFor="displayName" className="sl-field-label">
             Nombre visible
           </label>
           <input
@@ -131,7 +125,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="sl-label mb-2 block text-[0.65rem]">
+          <label htmlFor="email" className="sl-field-label">
             Email
           </label>
           <div className="relative">
@@ -157,10 +151,7 @@ export default function RegisterPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label
-              htmlFor="password"
-              className="sl-label mb-2 block text-[0.65rem]"
-            >
+            <label htmlFor="password" className="sl-field-label">
               Contraseña
             </label>
             <div className="relative">
@@ -185,10 +176,7 @@ export default function RegisterPage() {
             </div>
           </div>
           <div>
-            <label
-              htmlFor="password2"
-              className="sl-label mb-2 block text-[0.65rem]"
-            >
+            <label htmlFor="password2" className="sl-field-label">
               Repetir
             </label>
             <div className="relative">

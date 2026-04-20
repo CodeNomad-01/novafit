@@ -57,9 +57,9 @@ export function AppShell({
 
   if (authLoading || !user) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center sl-app-bg">
-        <div className="relative z-10 sl-label">
-          [ VERIFICANDO CREDENCIALES... ]
+      <div className="relative flex min-h-screen items-center justify-center px-4 sl-app-bg">
+        <div className="relative z-10 max-w-full text-center">
+          <p className="sl-label">[ VERIFICANDO CREDENCIALES ]</p>
         </div>
       </div>
     )
@@ -69,13 +69,13 @@ export function AppShell({
     <div className="relative z-10 flex min-h-screen flex-col text-[var(--sl-text)] sl-app-bg">
       {/* HEADER */}
       <header className="sticky top-0 z-40 border-b border-[var(--sl-border)] bg-[rgba(3,5,13,0.85)] backdrop-blur-xl">
-        <div className="sl-container relative flex items-center justify-between gap-3 py-3">
+        <div className="sl-container relative flex items-center justify-between gap-2 py-3 sm:gap-3">
           <Link
             href="/"
-            className="sl-focus flex shrink-0 items-center gap-3 rounded-sm p-1"
+            className="sl-focus flex min-w-0 shrink items-center gap-2 rounded-sm p-1 sm:gap-3"
           >
             <span
-              className="sl-ico"
+              className="sl-ico shrink-0"
               style={{
                 boxShadow:
                   'inset 0 0 12px rgba(92, 225, 255, 0.25), 0 0 16px rgba(92, 225, 255, 0.35)',
@@ -84,8 +84,8 @@ export function AppShell({
             >
               <FiZap className="h-5 w-5" />
             </span>
-            <div className="hidden leading-none sm:block">
-              <span className="sl-title block text-[0.95rem] font-bold text-[var(--sl-text)]">
+            <div className="hidden min-w-0 leading-none sm:block">
+              <span className="sl-title block truncate text-[0.95rem] font-bold text-[var(--sl-text)]">
                 NOVAFIT · SYSTEM
               </span>
               <span className="sl-label mt-1 block text-[0.6rem]">
@@ -149,15 +149,18 @@ export function AppShell({
         {hydrated && activeSessionId && (
           <Link
             href={`/session/${activeSessionId}`}
-            className="relative block overflow-hidden border-t border-[var(--sl-cyan)]/40 bg-[rgba(92,225,255,0.08)] px-4 py-2.5 text-center transition hover:bg-[rgba(92,225,255,0.14)]"
+            className="relative block overflow-hidden border-t border-[var(--sl-cyan)]/40 bg-[rgba(92,225,255,0.08)] px-3 py-2.5 text-center transition hover:bg-[rgba(92,225,255,0.14)] sm:px-4"
           >
-            <span className="sl-label inline-flex items-center gap-2 text-[var(--sl-cyan)]">
-              <span className="relative inline-flex h-2 w-2">
+            <span className="sl-label sl-label-tight inline-flex items-center gap-2 text-[var(--sl-cyan)]">
+              <span className="relative inline-flex h-2 w-2 shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--sl-cyan)] opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--sl-cyan)] sl-pulse-dot" />
               </span>
-              <FiPlay className="h-3.5 w-3.5" aria-hidden />
-              [ MISIÓN EN CURSO · VOLVER AL COMBATE ]
+              <FiPlay className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="sm:hidden">[ MISIÓN EN CURSO ]</span>
+              <span className="hidden sm:inline">
+                [ MISIÓN EN CURSO · VOLVER AL COMBATE ]
+              </span>
             </span>
           </Link>
         )}
@@ -167,21 +170,21 @@ export function AppShell({
 
       {/* TITLE BLOCK */}
       {!noHeaderTitle && title && (
-        <div className="sl-container relative z-10 pb-2 pt-10 sl-animate-in md:pt-12">
+        <div className="sl-container relative z-10 pb-2 pt-8 sl-animate-in sm:pt-10 md:pt-12">
           {eyebrow && <p className="sl-label mb-3">{eyebrow}</p>}
-          <h1 className="sl-title text-2xl font-bold leading-tight text-[var(--sl-text)] sm:text-3xl">
+          <h1 className="sl-title text-2xl font-bold leading-tight text-[var(--sl-text)] sm:text-3xl break-words">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-[var(--sl-text-dim)]">
+            <p className="mt-3 max-w-[56ch] text-sm leading-relaxed text-[var(--sl-text-dim)] sm:text-[15px]">
               {subtitle}
             </p>
           )}
-          <div className="sl-divider mt-6 opacity-60" />
+          <div className="sl-divider mt-5 opacity-60 sm:mt-6" />
         </div>
       )}
 
-      <main className="nv-mobile-nav-pad sl-container relative z-10 flex-1 pb-10 pt-8 md:pb-14 md:pt-10">
+      <main className="nv-mobile-nav-pad sl-container relative z-10 flex-1 pb-10 pt-6 sm:pt-8 md:pb-14 md:pt-10">
         {children}
       </main>
 
@@ -192,7 +195,7 @@ export function AppShell({
         aria-label="Principal móvil"
       >
         <div className="sl-divider absolute inset-x-0 top-0 opacity-60" />
-        <div className="mx-auto flex max-w-lg items-stretch justify-around px-2 pt-1">
+        <div className="mx-auto flex max-w-lg items-stretch justify-around px-1 pt-1 sm:px-2">
           {nav.map(({ href, label, icon: Icon }) => {
             const active =
               href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -200,7 +203,7 @@ export function AppShell({
               <Link
                 key={href}
                 href={href}
-                className={`sl-focus flex min-w-[4rem] flex-1 flex-col items-center gap-1 py-2.5 sl-title text-[0.62rem] font-bold tracking-[0.18em] transition ${
+                className={`sl-focus flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2.5 sl-title text-[0.58rem] font-bold tracking-[0.12em] transition sm:text-[0.62rem] sm:tracking-[0.18em] ${
                   active
                     ? 'text-[var(--sl-cyan)]'
                     : 'text-[var(--sl-muted)]'
@@ -212,27 +215,27 @@ export function AppShell({
                 }
               >
                 <Icon
-                  className={`h-5 w-5 transition ${active ? 'scale-110 opacity-100' : 'opacity-75'}`}
+                  className={`h-5 w-5 shrink-0 transition ${active ? 'scale-110 opacity-100' : 'opacity-75'}`}
                   strokeWidth={active ? 2.6 : 2}
                   aria-hidden
                 />
-                {label}
+                <span className="max-w-full truncate">{label}</span>
               </Link>
             )
           })}
           <Link
             href="/account"
-            className={`sl-focus flex min-w-[4rem] flex-1 flex-col items-center gap-1 py-2.5 sl-title text-[0.62rem] font-bold tracking-[0.18em] transition ${
+            className={`sl-focus flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2.5 sl-title text-[0.58rem] font-bold tracking-[0.12em] transition sm:text-[0.62rem] sm:tracking-[0.18em] ${
               pathname.startsWith('/account')
                 ? 'text-[var(--sl-cyan)]'
                 : 'text-[var(--sl-muted)]'
             }`}
           >
             <FiUser
-              className={`h-5 w-5 transition ${pathname.startsWith('/account') ? 'scale-110 opacity-100' : 'opacity-75'}`}
+              className={`h-5 w-5 shrink-0 transition ${pathname.startsWith('/account') ? 'scale-110 opacity-100' : 'opacity-75'}`}
               aria-hidden
             />
-            Cuenta
+            <span className="max-w-full truncate">Cuenta</span>
           </Link>
         </div>
       </nav>

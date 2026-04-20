@@ -108,11 +108,11 @@ export default function RoutineDetailPage() {
               </p>
             )}
           </header>
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:min-w-[220px]">
             <button
               type="button"
               onClick={handleStart}
-              className="sl-btn sl-btn-primary sl-focus min-w-[220px] py-4 text-sm"
+              className="sl-btn sl-btn-primary sl-focus w-full py-4 text-sm sm:flex-1 lg:flex-none"
             >
               <FiPlay className="h-5 w-5" aria-hidden />
               Iniciar combate
@@ -129,7 +129,7 @@ export default function RoutineDetailPage() {
                   router.push('/routines')
                 }
               }}
-              className="sl-btn sl-btn-danger sl-btn-sm sl-focus"
+              className="sl-btn sl-btn-danger sl-btn-sm sl-focus w-full sm:w-auto lg:w-full"
             >
               <FiTrash2 className="h-4 w-4" aria-hidden />
               Eliminar
@@ -147,21 +147,21 @@ export default function RoutineDetailPage() {
           {routine.exercises.map((ex, i) => (
             <li
               key={ex.id}
-              className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+              className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0 sm:gap-3"
             >
-              <span className="flex min-w-0 items-center gap-3">
+              <span className="flex min-w-0 flex-1 items-center gap-3">
                 <span
                   className="sl-stat flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--sl-cyan)]/45 bg-[rgba(92,225,255,0.05)] text-xs font-bold text-[var(--sl-cyan)]"
                   aria-hidden
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <span className="truncate font-semibold text-[var(--sl-text)]">
+                <span className="min-w-0 truncate font-semibold text-[var(--sl-text)]">
                   {ex.name}
                 </span>
               </span>
-              <span className="sl-chip">
-                {ex.plannedSets}×{ex.defaultReps} · {ex.defaultWeight} kg
+              <span className="sl-chip shrink-0">
+                {ex.plannedSets}×{ex.defaultReps} · {ex.defaultWeight}kg
               </span>
             </li>
           ))}

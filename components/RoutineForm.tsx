@@ -75,15 +75,12 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
         <header className="sl-section-head mb-4">
           <p className="sl-label">[ DATOS DE LA MISIÓN ]</p>
         </header>
-        <label
-          htmlFor="routine-name"
-          className="block text-sm font-semibold text-[var(--sl-text)]"
-        >
+        <label htmlFor="routine-name" className="sl-field-label">
           Nombre de la misión
         </label>
         <input
           id="routine-name"
-          className="sl-input mt-2"
+          className="sl-input"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ej. Empuje · Pierna · Full body"
@@ -96,8 +93,8 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <header className="sl-section-head">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <header className="sl-section-head min-w-0">
             <p className="sl-label sl-label-violet">[ OBJETIVOS ]</p>
             <h2 className="sl-title text-lg font-bold tracking-tight text-[var(--sl-text)]">
               Ejercicios de la misión
@@ -106,7 +103,7 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
           <button
             type="button"
             onClick={addExercise}
-            className="sl-btn sl-btn-violet sl-btn-sm sl-focus"
+            className="sl-btn sl-btn-violet sl-btn-sm sl-focus w-full shrink-0 sm:w-auto"
           >
             <FiPlus className="h-4 w-4" aria-hidden />
             Añadir objetivo
@@ -118,7 +115,7 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
           <div key={ex.id} className="sl-panel sl-pad-sm sl-animate-in">
             <div className="mb-4 flex items-start gap-3">
               <div className="min-w-0 flex-1">
-                <p className="sl-label text-[var(--sl-violet)]">
+                <p className="sl-label sl-label-tight text-[var(--sl-violet)]">
                   [ OBJETIVO {String(i + 1).padStart(2, '0')} ]
                 </p>
                 <input
@@ -142,11 +139,10 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div>
-                <label className="sl-label mb-2 block text-[0.65rem]">
-                  Series
-                </label>
+                <label className="sl-field-label">Series</label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   className="sl-input sl-stat py-2.5 tabular-nums"
                   value={ex.plannedSets}
@@ -156,11 +152,10 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
                 />
               </div>
               <div>
-                <label className="sl-label mb-2 block text-[0.65rem]">
-                  Reps base
-                </label>
+                <label className="sl-field-label">Reps base</label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   min={0}
                   className="sl-input sl-stat py-2.5 tabular-nums"
                   value={ex.defaultReps}
@@ -170,11 +165,10 @@ export function RoutineForm({ initial, onSubmit, submitLabel }: Props) {
                 />
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <label className="sl-label mb-2 block text-[0.65rem]">
-                  Peso base (kg)
-                </label>
+                <label className="sl-field-label">Peso base (kg)</label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   step="0.5"
                   className="sl-input sl-stat py-2.5 tabular-nums"
