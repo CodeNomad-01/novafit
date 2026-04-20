@@ -56,6 +56,62 @@ async function loadProfile(userId: string): Promise<ProfileRow | null> {
 }
 
 /**
+ * Red de seguridad: si el trigger `handle_new_user` de Supabase falló y el
+ * `auth.users` quedó sin su row en `public.profiles`, lo creamos al vuelo en
+ * el primer login usando el metadata con el que el usuario se registró.
+ */
+async function ensureProfile(session: Session): Promise<ProfileRow | null> {
+  const existing = await loadProfile(session.user.id)
+  if (existing) return existing
+
+  const meta = session.user.user_metadata ?? {}
+  const email = session.user.email ?? ''
+  const rawUsername = String(meta.username ?? '').toLowerCase()
+  const fallbackFromEmail = email
+    .split('@')[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '_')
+    .slice(0, 24)
+  const baseUsername = /^[a-z0-9_]{3,24}$/.test(rawUsername)
+    ? rawUsername
+    : fallbackFromEmail.padEnd(3, '0').slice(0, 24)
+  const displayName = (
+    String(meta.display_name ?? '').trim() || baseUsername
+  ).slice(0, 64)
+
+  // Intentamos insertar; si el username choca, añadimos sufijo y reintentamos.
+  for (let attempt = 0; attempt <= 20; attempt++) {
+    const username =
+      attempt === 0 ? baseUsername : `${baseUsername.slice(0, 21)}_${attempt}`
+    const friendCode = Math.random()
+      .toString(36)
+      .replace(/[^a-z0-9]/gi, '')
+      .toUpperCase()
+      .slice(0, 6)
+      .padEnd(6, 'X')
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({
+        id: session.user.id,
+        username,
+        display_name: displayName,
+        friend_code: friendCode,
+        avatar_color: '#5ce1ff',
+      })
+      .select('*')
+      .maybeSingle()
+
+    if (!error && data) return data
+    if (error && error.code !== '23505') {
+      console.warn('[auth] ensureProfile insert error:', error.message)
+      return null
+    }
+  }
+  return null
+}
+
+/**
  * Si el usuario entra con algo que parece username (sin @), lo traducimos a
  * email consultando public.profiles + auth.admin (no disponible desde cliente).
  * Como workaround usaremos un flujo simple: login siempre por email.
@@ -76,9 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
       return
     }
-    const profile = await loadProfile(session.user.id)
+    const profile = await ensureProfile(session)
     if (!profile) {
-      // El trigger debería crear el profile; si no existe, avisamos.
       setUser(null)
       return
     }
@@ -161,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const profile = await loadProfile(data.user.id)
+      const profile = await ensureProfile(data.session)
       const pub = profile
         ? profileToPublicUser(profile, data.user.email ?? email)
         : undefined
@@ -191,9 +246,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       })
       if (error) return { ok: false, error: error.message }
-      if (!data.user) return { ok: false, error: 'No se pudo iniciar sesión.' }
+      if (!data.user || !data.session) return { ok: false, error: 'No se pudo iniciar sesión.' }
 
-      const profile = await loadProfile(data.user.id)
+      const profile = await ensureProfile(data.session)
       const pub = profile
         ? profileToPublicUser(profile, data.user.email ?? email)
         : undefined

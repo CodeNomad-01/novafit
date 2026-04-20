@@ -157,27 +157,51 @@ security definer
 set search_path = public
 as $$
 declare
-  uname text;
-  dname text;
+  uname       text;
+  base_uname  text;
+  dname       text;
+  attempt     int := 0;
 begin
+  -- 1) Normalizar el username que viene del cliente (o derivarlo del email)
   uname := lower(coalesce(new.raw_user_meta_data->>'username', ''));
   if uname = '' or uname !~ '^[a-z0-9_]{3,24}$' then
-    raise exception 'Username inválido. Debe tener 3-24 caracteres [a-z0-9_].';
+    uname := lower(regexp_replace(split_part(coalesce(new.email, ''), '@', 1),
+                                  '[^a-z0-9_]', '_', 'g'));
+    if char_length(uname) > 24 then
+      uname := substr(uname, 1, 24);
+    end if;
+    if char_length(uname) < 3 then
+      uname := uname || substr(replace(new.id::text, '-', ''), 1, 6);
+      uname := substr(uname, 1, 24);
+    end if;
   end if;
-  if exists (select 1 from public.profiles where username = uname) then
-    raise exception 'Ese nombre de cazador ya existe.';
-  end if;
+
+  -- 2) Si ya existe, añadir sufijo numérico en vez de explotar
+  base_uname := uname;
+  while exists (select 1 from public.profiles where username = uname) loop
+    attempt := attempt + 1;
+    uname := substr(base_uname, 1, 21) || '_' || attempt::text;
+    exit when attempt > 99;
+  end loop;
 
   dname := coalesce(nullif(trim(new.raw_user_meta_data->>'display_name'), ''), uname);
 
-  insert into public.profiles (id, username, display_name, friend_code, avatar_color)
-  values (
-    new.id,
-    uname,
-    dname,
-    public.generate_friend_code(),
-    public.avatar_color_for(uname)
-  );
+  -- 3) Intentar crear el profile; si falla por cualquier motivo, NO abortamos el
+  --    signup: dejamos que el cliente lo cree en el primer login.
+  begin
+    insert into public.profiles (id, username, display_name, friend_code, avatar_color)
+    values (
+      new.id,
+      uname,
+      dname,
+      public.generate_friend_code(),
+      public.avatar_color_for(uname)
+    );
+  exception when others then
+    raise warning 'handle_new_user: no se pudo crear profile (%): %',
+      sqlstate, sqlerrm;
+  end;
+
   return new;
 end;
 $$;
