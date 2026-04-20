@@ -509,10 +509,10 @@ export default function SessionPage() {
       {/* ACCIONES FIJAS MÓVIL */}
       {!isDone && (
         <div
-          className="fixed bottom-0 left-1/2 z-40 w-full -translate-x-1/2 border-t border-[var(--sl-cyan)]/30 bg-[rgba(3,5,13,0.95)] p-3 backdrop-blur-xl"
+          className="fixed left-1/2 z-40 w-full -translate-x-1/2 border-t border-[var(--sl-cyan)]/30 bg-[rgba(3,5,13,0.95)] p-3 backdrop-blur-xl"
           style={{
             maxWidth: 'var(--sl-app-max)',
-            marginBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4.5rem)',
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 4.5rem)',
           }}
         >
           <div className="sl-divider absolute inset-x-0 top-0 opacity-60" />
