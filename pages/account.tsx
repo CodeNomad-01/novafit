@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   FiAlertCircle,
+  FiAlertTriangle,
   FiCheckCircle,
   FiLogOut,
   FiSave,
@@ -37,6 +38,30 @@ export default function AccountPage() {
     text: string
   } | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Fallback para usuarios con contraseña antigua (< 8 caracteres)
+  const [forceUpdate, setForceUpdate] = useState(false)
+  const pwdSectionRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (!router.isReady) return
+    let flagged = router.query.update === 'password'
+    if (!flagged) {
+      try {
+        flagged = window.sessionStorage.getItem('novafit:password-weak') === '1'
+      } catch {}
+    }
+    if (flagged) {
+      setForceUpdate(true)
+      const t = window.setTimeout(() => {
+        pwdSectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 120)
+      return () => window.clearTimeout(t)
+    }
+  }, [router.isReady, router.query.update])
 
   if (loading) {
     return (
@@ -88,6 +113,13 @@ export default function AccountPage() {
     setNext('')
     setNext2('')
     setPwdMsg({ tone: 'ok', text: 'Contraseña actualizada.' })
+    setForceUpdate(false)
+    try {
+      window.sessionStorage.removeItem('novafit:password-weak')
+    } catch {}
+    if (router.query.update === 'password') {
+      router.replace('/account', undefined, { shallow: true })
+    }
     setTimeout(() => setPwdMsg(null), 2500)
   }
 
@@ -117,6 +149,33 @@ export default function AccountPage() {
       subtitle="Configura tu identidad de cazador, cambia la contraseña o finaliza la sesión."
     >
       <div className="sl-stack">
+        {forceUpdate && (
+          <div
+            role="alert"
+            className="sl-corners sl-animate-in border border-[var(--sl-gold)]/55 bg-[rgba(255,215,106,0.1)] p-4"
+            style={{ boxShadow: '0 0 24px rgba(255,215,106,0.18)' }}
+          >
+            <div className="flex items-start gap-3">
+              <FiAlertTriangle
+                className="mt-0.5 h-5 w-5 shrink-0 text-[var(--sl-gold)]"
+                aria-hidden
+              />
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="sl-label sl-label-gold">
+                  [ ACTUALIZACIÓN DE SEGURIDAD ]
+                </p>
+                <p className="text-sm font-semibold text-[var(--sl-text)]">
+                  Tu contraseña es más corta que el nuevo mínimo (8 caracteres).
+                </p>
+                <p className="text-xs leading-relaxed text-[var(--sl-text-dim)]">
+                  Por seguridad del Sistema, actualízala ahora en el panel de
+                  abajo. Podrás seguir usando NovaFit normalmente después.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <section className="sl-panel sl-pad-lg">
           <header className="sl-section-head mb-5">
             <div className="sl-head-row">
@@ -185,7 +244,19 @@ export default function AccountPage() {
           </form>
         </section>
 
-        <section className="sl-panel sl-pad-lg">
+        <section
+          ref={pwdSectionRef}
+          className={`sl-panel sl-pad-lg ${forceUpdate ? 'sl-panel-glow' : ''}`}
+          style={
+            forceUpdate
+              ? {
+                  borderColor: 'rgba(255, 215, 106, 0.55)',
+                  boxShadow:
+                    'inset 0 0 20px rgba(255, 215, 106, 0.1), 0 0 24px rgba(255, 215, 106, 0.18)',
+                }
+              : undefined
+          }
+        >
           <header className="sl-section-head mb-5">
             <div className="sl-head-row">
               <span className="sl-ico sl-ico-violet">
@@ -194,8 +265,13 @@ export default function AccountPage() {
               <div>
                 <p className="sl-label sl-label-violet">[ SECURITY ]</p>
                 <h2 className="sl-title text-lg font-bold text-[var(--sl-text)]">
-                  Cambiar contraseña
+                  {forceUpdate ? 'Actualiza tu contraseña' : 'Cambiar contraseña'}
                 </h2>
+                {forceUpdate && (
+                  <p className="mt-1 text-xs text-[var(--sl-text-dim)]">
+                    Mínimo 8 caracteres. Se aplicará al instante.
+                  </p>
+                )}
               </div>
             </div>
           </header>

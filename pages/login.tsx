@@ -32,6 +32,15 @@ export default function LoginPage() {
       setError(res.error ?? 'No se pudo iniciar sesión.')
       return
     }
+    // Usuarios anteriores con contraseña < 8 caracteres: los marcamos para que
+    // /account les muestre un aviso pidiendo actualizar la contraseña.
+    if (password.length < 8) {
+      try {
+        window.sessionStorage.setItem('novafit:password-weak', '1')
+      } catch {}
+      router.replace('/account?update=password')
+      return
+    }
     router.replace(redirect)
   }
 
@@ -98,7 +107,6 @@ export default function LoginPage() {
               name="password"
               type="password"
               autoComplete="current-password"
-              minLength={8}
               maxLength={128}
               className="sl-input pl-10"
               placeholder="••••••••"
